@@ -266,7 +266,7 @@ class Garbage extends BaseModel
     //根据垃圾查询垃圾当前时间的价格
     public function GetPrice($data,$post)
     {
-//        $regionG=new RegionGroup();
+        $regionG=new RegionGroup();
         $GarbagePrice=new GarbagePrice();
         foreach($data as $key => $value){
             $where['garbageid']=$value['id'];
@@ -320,7 +320,23 @@ class Garbage extends BaseModel
 //                    $data[$key]['number']=$price[0]['number'];
                     $data[$key]['danwei'][$k]['garbageunitid']=$price[0]['id'];
                 }else{
-                    $data[$key]['danwei'][$k]['price']=0;
+                    //次垃圾的此单位不存在价格查看父亲
+                    if($value['pga']==0){
+                        $data[$key]['danwei'][$k]['price']=0;
+                    }else{
+                        //不是最顶级垃圾 找上级是否有同名
+                        $where['danweiming']=$v['danweiming'];
+                        $where['id']=$value['pga'];
+                        $garbageinfo=$regionG->MFind($where);
+                        //上级存在就按上级的下个算
+                        if($garbageinfo){
+
+                        }else{
+                            //上级不存在 兑换成重量并查看本级是否有价格 没有查询上级价格
+                        }
+                    }
+                    print_r($value);
+                    exit;
 //                    unset($data[$key]);
                 }
             }

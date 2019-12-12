@@ -28,8 +28,11 @@ class OrderLog extends BaseModel
 //                $where[] = ['status', '<=', 2];
 //            }
 //        }
+
         if(array_key_exists("jifen",$post)&&$post['jifen']!=""){
             $where[] = ['jifen', '=', $post['jifen']];
+        }else{
+            $where[]=['jifen','=',0];
         }
         if(array_key_exists("status",$post)&&$post['status']!="") {
             $where[] = ['status', '=', $post['status']];

@@ -317,8 +317,10 @@ class Order extends BaseModel
                     }
                     $res1 = $this->ChangeGarbage($garbagelist, $post['ordernumber']);
                     if ($res1) {
-                        $data['price'] = $order_list['price'];
-                        $data['znumber'] = $order_list['znumber'];
+                        if($order['isbaozhi']!=1){
+                            $data['price'] = $order_list['price'];
+                            $data['znumber'] = $order_list['znumber'];
+                        }
 //                        $data['weight'] = $order_list['zweight'];
 //                        $data['zweight'] = $order_list['zweight'];
                         $data['create_time'] = time();
@@ -872,6 +874,7 @@ class Order extends BaseModel
 
     public function UpJiFen($user,$old_order)
     {
+
         $userM=new User();
         if($user['userInfo']['groupid']==1){
             $where['id']=$old_order['uuser'];
@@ -894,7 +897,8 @@ class Order extends BaseModel
             $res1 = (new User())->MUpdate($_wh,$_update);
             //写入日志
             $log['addtime'] = time();
-            $log['userid'] = $user['userInfo']['id'];
+            $log['confirmuserid'] = $user['userInfo']['id'];
+            $log['userid'] = $old_order['user_id'];
             $log['orderid'] = $old_order['id'];
             $log['status']=1;
             $log['type'] = $user['userInfo']['groupid'];
@@ -902,13 +906,14 @@ class Order extends BaseModel
             $log['jfprice']=$old_order['price'];
             $res2 = (new OrderLog())->setOrderLog($log);
             $log['addtime'] = time();
-            $log['userid'] = $user['userInfo']['id'];
+            $log['confirmuserid'] = $user['userInfo']['id'];
+            $log['userid'] = $old_order['user_id'];
             $log['orderid'] = $old_order['id'];
             $log['status']=1;
+            $log['jifen']=0;
             $log['type'] = $user['userInfo']['groupid'];
             $log['jfprice']=$old_order['price'];
             $res3 = (new OrderLog())->setOrderLog($log);
-
             $_wh = [];
             $_wh[] =['id','=',$twouser['id']];
             $old_user = (new User())->MFind($_wh,'');
@@ -922,14 +927,14 @@ class Order extends BaseModel
             $_update1['jifen'] = $old_user['jifen'] + intval($old_order['price']);
             $res4 = (new User())->MUpdate($_wh,$_update1);
             //写入日志
-            $log1['addtime'] = time();
-            $log1['userid'] = $twouser['id'];
-            $log1['orderid'] = $old_order['id'];
-            $log1['status']=1;
-            $log1['type'] = $twouser['groupid'];
-            $log1['jfprice']=$old_order['price'];
-            $res5 = (new OrderLog())->setOrderLog($log1);
-            if($res1&&$res2&&$res3&&$res4&&$res5){
+//            $log1['addtime'] = time();
+//            $log1['userid'] = $twouser['id'];
+//            $log1['orderid'] = $old_order['id'];
+//            $log1['status']=1;
+//            $log1['type'] = $twouser['groupid'];
+//            $log1['jfprice']=$old_order['price'];
+//            $res5 = (new OrderLog())->setOrderLog($log1);
+            if($res1&&$res2&&$res3&&$res4){
                 return true;
             }else{
                 return false;
@@ -937,23 +942,6 @@ class Order extends BaseModel
         }else{
             return false;
         }
-//        $tixian_log = [];
-//        $tixian_log[0]['price'] = $old_order['price'];
-//        $tixian_log[0]['userid'] = $user['userInfo']['id'];
-//        $tixian_log[0]['type'] = $user['userInfo']['groupid'];
-//        $tixian_log[0]['status'] = 0;
-//        $tixian_log[0]['txnumber'] = $ordernumber;
-//        $tixian_log[0]['operation'] = 1;
-//        $tixian_log[0]['create_time'] = time();
-//        $tixian_log[1]['price'] = intval($old_order['zweight']);
-//        $tixian_log[1]['userid'] = $user['userInfo']['id'];
-//        $tixian_log[1]['type'] = $user['userInfo']['groupid'];
-//        $tixian_log[1]['status'] = 0;
-//        $tixian_log[1]['txnumber'] = $ordernumber;
-//        $tixian_log[1]['operation'] = 1;
-//        $tixian_log[1]['create_time'] = time();
-//        $res4 = (new TiXian())->MBulkAdd($tixian_log);
-
     }
     //门店订单确定
     private function ShopConfirm($data)
