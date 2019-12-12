@@ -1,0 +1,12 @@
+/.idea
+/.vscode
+/vendor
+/Upload
+/public/Upload
+/public/ExcelPic
+/public/test
+/runtime
+*.log
+thinkphp
+.env
+.DS_Store

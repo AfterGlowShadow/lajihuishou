@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv = "Content-Type" content = "text/html; charset=utf-8" />
+    <meta name = "viewport"
+          content = "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>请稍后，授权登中 ...</title>
+    <link rel = "stylesheet" href = "loading/stylea.css">
+</head>
+
+<body>
+<div class = "base">
+    <div class = "cube"></div>
+    <div class = "cube"></div>
+    <div class = "cube"></div>
+    <div class = "cube"></div>
+    <div class = "cube"></div>
+    <div class = "cube"></div>
+    <div class = "cube"></div>
+    <div class = "cube"></div>
+    <div class = "cube"></div>
+</div>
+</body>
+<script src = "loading/axios.min.js" defer></script>
+<script>
+    function getUrlParam(name) {
+        var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+        var r = window.location.search.substr(1).match(reg);
+        if (r != null) return unescape(r[2]);
+        return null;
+    }
+
+    function qsx(data) {
+        var arr = [];
+        for (var name in data) {
+            arr.push(
+                encodeURIComponent(name) + "=" + encodeURIComponent(data[name])
+            );
+        }
+        arr.push(("v=" + Math.random()).replace(".", ""));
+        return arr.join("&");
+    }
+
+    function requestUserDataByCode(code) {
+        return new Promise((resolve, reject) => {
+            axios.defaults.timeout = 60000;
+            axios.defaults.baseURL = "";
+
+            var url = "/api/wechat/index",
+                params = qsx({
+                    code: code
+                });
+            axios.post(url, params).then(response => {
+                if (Number(response.data.code) == 200) {
+                    resolve(response.data.data);
+                } else {
+                    reject(response);
+                }
+                console.log(response);
+            }).catch(reject => {
+                reject("微信登陆授权失败");
+            });
+        });
+    }
+
+    window.onload = function () {
+        console.log("tian")
+        var code = getUrlParam("code");
+        if (code) {
+            var url = window.location.protocol + "//" + window.location.hostname,
+                path = window.location.pathname.toLocaleLowerCase(),
+                endNum = path.lastIndexOf("/"),
+                pathName = (endNum == -1) ? path : path.substr(path, endNum);
+            requestUserDataByCode(code).then(
+                (res) => {
+                    console.log(res)
+                    var openid = '';
+                    if (res.userInfo) {
+                        let user = {
+                            token: res.authKey,
+                            shopMode: res.retrospect_model,
+                            oda: res.userInfo
+                        }
+                        window.sessionStorage.setItem("user", JSON.stringify(user));
+                        window.localStorage.setItem("OpenId", user['oda']['openid']);
+                    } else {
+                        window.sessionStorage.setItem("OpenId", res);
+                        window.localStorage.setItem("OpenId", res);
+                    }
+                    window.location = url + pathName + "/index.html";
+                    // alert(url + pathName + '/index.html|OpenId=' + res);
+                }
+            ).catch(
+                (frs) => {
+                    console.log(frs);
+                    alert(frs);
+                }
+            );
+        } else {
+            var appId = "wxb4483fd1627ab981",
+                redirect_url = encodeURIComponent(window.location),
+                url = "https://open.weixin.qq.com/connect/oauth2/authorize?appid=" + appId + "&redirect_uri=" + redirect_url + "&response_type=code&scope=snsapi_userinfo&state=STATE#wechat_redirect";
+            window.location = url;
+        }
+    };
+</script>
+</html>
