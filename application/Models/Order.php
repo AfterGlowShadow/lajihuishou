@@ -1257,16 +1257,26 @@ class Order extends BaseModel
                     $this->error="修改失败";
                     return $res;
                 }
-            }else if($post['type']=="shenheoutorder"&&($user['userInfo']['groupid']==4||$user['userInfo']['groupid']==6)){
-                $data['status']=2;
-                $data['kuaijitime']=time();
-                $where['ordernumber']=$post['id'];
-                $res=$this->MUpdate($where,$data);
-                if($res){
-                    return $res;
+            }else if($post['type']=="shenheoutorder"&&$user['userInfo']['groupid']==6){
+                if(array_key_exists("status",$post)&&($post['status']==4||$post['status']==2)){
+                    if($this->OutOrderConfirm($post['id'],$post['status'])){
+                        $data['status']=$post['status'];
+                        $data['kuaijitime']=time();
+                        $where['id']=$post['id'];
+                        $res=$this->MUpdate($where,$data);
+                        if($res){
+                            return $res;
+                        }else{
+                            $this->error="修改失败";
+                            return $res;
+                        }
+                    }else{
+                        $this->error="修改失败";
+                        return false;
+                    }
                 }else{
                     $this->error="修改失败";
-                    return $res;
+                    return false;
                 }
             }else{
                 $this->error="请确认参数是否正确,或者权限不足";
@@ -1274,6 +1284,28 @@ class Order extends BaseModel
             }
         }else{
             $this->error="缺少必要参数";
+            return false;
+        }
+    }
+    //会计确定订单或者驳回订单4为驳回2为确定
+    public function OutOrderConfirm($id,$status){
+        if($status==2){
+            //修改订单垃圾关联表中的数据outend 标识为已经处理完了的垃圾订单(托盘删除根据这个决定)
+            $garbageorderM=new GarbageOrder();
+            $garbageordercont['outorderid']=$id;
+            $data['outend']=1;
+            $res=$garbageorderM->MUpdate($garbageordercont,$data);
+            return $res;
+        }else if($status==4){
+            //修改订单垃圾关联表中的is_shangjiao 和outorderid 删除其中数据 将这些订单垃圾标识为未出库状态 由库管再次处理
+            $garbageorderM=new GarbageOrder();
+            $garbageordercont['outorderid']=$id;
+            $data['outend']=0;
+            $data['is_shangjiao']=0;
+            $data['outorderid']=0;
+            $res=$garbageorderM->MUpdate($garbageordercont,$data);
+            return $res;
+        }else{
             return false;
         }
     }

@@ -50,7 +50,7 @@ class Tray extends BaseModel
                     $this->error = "此编号已经存在";
                     return false;
                 } else {
-                    if($post['znumber']>=$tray['cnumber']&&$post['zweight']>=$tray['cweight']) {
+//                    if($post['znumber']>=$tray['cnumber']&&$post['zweight']>=$tray['cweight']) {
                         $acont['token'] = $post['token'];
                         $res = $this->MUpdate($acont, $post);
                         if ($res) {
@@ -59,13 +59,13 @@ class Tray extends BaseModel
                             $this->error = "修改失败";
                             return false;
                         }
-                    }else{
-                        $this->error="修改重量或个数小于现有重量或个数";
-                        return false;
-                    }
+//                    }else{
+//                        $this->error="修改重量或个数小于现有重量或个数";
+//                        return false;
+//                    }
                 }
             } else {
-                if($post['znumber']>=$tray['cnumber']&&$post['zweight']>=$tray['cweight']){
+//                if($post['znumber']>=$tray['cnumber']&&$post['zweight']>=$tray['cweight']){
                     $acont['token'] = $post['token'];
                     $res = $this->MUpdate($acont, $post);
                     if ($res) {
@@ -74,10 +74,10 @@ class Tray extends BaseModel
                         $this->error = "修改失败";
                         return false;
                     }
-                }else{
-                    $this->error="修改重量或个数小于现有重量或个数";
-                    return false;
-                }
+//                }else{
+//                    $this->error="修改重量或个数小于现有重量或个数";
+//                    return false;
+//                }
             }
        # }else{
        #     $this->error="托盘编号不能为空";
@@ -365,97 +365,107 @@ class Tray extends BaseModel
         $post = Request::post();
         (new TokenValidate())->goCheck($post);
         if(array_key_exists("id",$post)&&$post['id']!=""){
-            $mcont['token'] = $post['token'];
+//            $mcont['token'] = $post['token'];
             $mcont['del'] = 0;
             $mcont['status'] = 1;
             $number=0;
-            $res = $this->MFind($mcont);
-            $OrderModel=new Order();
-            $where['status']=6;
-            $where['del']=0;
-            $weigth=0;
-            $garbagelist=array();
+            $res = $this->MSelect($mcont);
+            foreach ($res as $key => $value){
+                $OrderModel=new Order();
+                $where['status']=6;
+                $where['del']=0;
+                $where['trayid']=$value['id'];
+                $weigth=0;
+                $garbagelist=array();
 //            $where['trayid']=$res['id'];
-            $orderlist=$OrderModel->MSelect($where,"id desc");
-            $gargagep=new GarbageOrder();
-            $orderlist1=array();
-            $garbage=new Garbage();
-            $post['id']=explode(",",$post['id']);
-            $post['id']=$post['id'][0];
-            $gwhere1['id']=$post['id'];
-            $garbageinfo1=$garbage->MFind($gwhere1);
-            $res['garbage']=$garbageinfo1;
-            $temporder=array();
-            $temporder['garbage']=array();
-            foreach($orderlist as $key1 => $value1){
-                $gpwhere['orderid']=$value1['id'];
-                $gpwhere['del']=0;
-                $gpwhere['is_shangjiao']=0;
-                $gplist=$gargagep->MSelect($gpwhere);
-                if($gplist){
-                    //根据garbageid与is_上交去掉已将上交的垃圾
-                    $temporder['ordernumne']=$value1['ordernumber'];
-                    $temporder['create_time']=$value1['create_time'];
-                    $temporder['end_time']=$value1['end_time'];
-                    $temporder['goid']=array();
-                    $temporder['garbage']=array();
-                    $temp=array();
-                    $parbagenumber=array();
-                    $parbagenumber['weighting_num']=0;
-                    foreach ($gplist as $key => $value){
-                        $temp1=array();
-                        $gwhere['id']=explode(",",$value['garbageid']);
-                        $gwhere1['id']=$gwhere['id'][0];
-                        $garbageinfo=$garbage->MFind($gwhere1);
-                        $gwhere['id']=$gwhere['id'][(count($gwhere['id'])-2)];
-                        if($gwhere['id']==$post['id']){
-                            $gwhere['del']=0;
-                            $garbageinfo=$garbage->MFind($gwhere);
+                $orderlist=$OrderModel->MSelect($where,"id desc");
+                $gargagep=new GarbageOrder();
+                $orderlist1=array();
+                $garbage=new Garbage();
+                $post['id']=explode(",",$post['id']);
+                $post['id']=$post['id'][0];
+                $gwhere1['id']=$post['id'];
+                $garbageinfo1=$garbage->MFind($gwhere1);
+                $res[$key]['garbage']=$garbageinfo1;
+                $temporder=array();
+                $temporder['garbage']=array();
+                foreach($orderlist as $key1 => $value1){
+                    $gpwhere['orderid']=$value1['id'];
+                    $gpwhere['del']=0;
+                    $gpwhere['is_shangjiao']=0;
+                    $gplist=$gargagep->MSelect($gpwhere);
+                    if($gplist){
+                        //根据garbageid与is_上交去掉已将上交的垃圾
+                        $temporder['ordernumne']=$value1['ordernumber'];
+                        $temporder['create_time']=$value1['create_time'];
+                        $temporder['end_time']=$value1['end_time'];
+                        $temporder['goid']=array();
+                        $temporder['garbage']=array();
+                        $temp=array();
+                        $parbagenumber=array();
+                        $parbagenumber['weighting_num']=0;
+                        foreach ($gplist as $k => $v){
+                            $temp1=array();
+                            $gwhere['id']=explode(",",$v['garbageid']);
+                            $gwhere1['id']=$gwhere['id'][0];
+                            $garbageinfo=$garbage->MFind($gwhere1);
+                            $garbageinfo=$garbage->MFind($gwhere1);
+                            $gwhere['id']=$gwhere['id'][(count($gwhere['id'])-2)];
+                            if($gwhere['id']==$post['id']){
 
-                            if(array_key_exists($gwhere['id'],$garbagelist)){
-                                $temp1['id']=$garbageinfo['id'];
-                                $temp1['goid']=$value['id'];
-                                array_push( $temporder['goid'],$value['id']);
-                                $temp1['pga']=$garbageinfo['pga'];
-                                $temp1['name']=$garbageinfo['name'];
-                                $temp1['number']+=$value['weighting_num'];
-                                $number+=$value['weighting_num'];
-                                $parbagenumber['weighting_num']+=$value['weighting_num'];
-                            }else{
-                                if($garbageinfo){
+                                $gwhere['del']=0;
+                                $garbageinfo=$garbage->MFind($gwhere);
+                                $garbageinfo=$garbage->MFind($gwhere);
+                                if(array_key_exists($gwhere['id'],$garbagelist)){
                                     $temp1['id']=$garbageinfo['id'];
+                                    $temp1['goid']=$v['id'];
+                                    array_push( $temporder['goid'],$v['id']);
                                     $temp1['pga']=$garbageinfo['pga'];
-                                    array_push( $temporder['goid'],$value['id']);
-                                    $temp1['goid']=$value['id'];
                                     $temp1['name']=$garbageinfo['name'];
-                                    $parbagenumber['name']=$garbageinfo['name'];
+                                    $temp1['number']+=$v['weighting_num'];
+                                    $number+=$v['weighting_num'];
+                                    $parbagenumber['weighting_num']+=$v['weighting_num'];
                                 }else{
-                                    $temp1['name']="";
+                                    if($garbageinfo){
+                                        $temp1['id']=$garbageinfo['id'];
+                                        $temp1['pga']=$garbageinfo['pga'];
+                                        array_push( $temporder['goid'],$v['id']);
+                                        $temp1['goid']=$value['id'];
+                                        $temp1['name']=$garbageinfo['name'];
+                                        $parbagenumber['name']=$garbageinfo['name'];
+                                    }else{
+                                        $temp1['name']="";
+                                    }
+                                    $temp1['number']=$v['weighting_num'];
+                                    $number+=$v['weighting_num'];
+                                    $parbagenumber['weighting_num']+=$v['weighting_num'];
                                 }
-                                $temp1['number']=$value['weighting_num'];
-                                $number+=$value['weighting_num'];
-                                $parbagenumber['weighting_num']+=$value['weighting_num'];
+                            }
+                            if(!empty($temp1)){
+                                array_push($temp,$temp1);
                             }
                         }
-                        if(!empty($temp1)){
-                            array_push($temp,$temp1);
+                        $temporder['garbage']=$temp;
+                        $temporder['garbageall']=$parbagenumber;
+                        if(!empty($temporder['garbage'])){
+                            array_push($orderlist1,$temporder);
                         }
                     }
-                    $temporder['garbage']=$temp;
-                    $temporder['garbageall']=$parbagenumber;
-                    if(!empty($temporder['garbage'])){
-                        array_push($orderlist1,$temporder);
-                    }
+                }
+                if($orderlist1){
+                    $res[$key]['orderlist']=$orderlist1;
+                    $res[$key]['allnumner']=$number;
+                    $res[$key]['allweight']=$weigth;
                 }
             }
-            if($orderlist1){
-                $res['orderlist']=$orderlist1;
-                $res['allnumner']=$number;
-                $res['allweight']=$weigth;
-                return $res;
-            }else{
-                BackData(200,"没有数据","");
-            }
+//            if($orderlist1){
+//                $res[$key]['orderlist']=$orderlist1;
+//                $res[$key]['allnumner']=$number;
+//                $res[$key]['allweight']=$weigth;
+//            }else{
+//                BackData(200,"没有数据","");
+//            }
+            return $res;
         }else{
             $this->error="缺少必要参数";
             return false;
@@ -490,9 +500,6 @@ class Tray extends BaseModel
             $data['is_shangjiao'] = 1;
             $this->startTrans();
             $gres = $garbageoM->MSelect($where);
-            print_r($where);
-            print_r($gres);
-            exit;
             if($gres){
                 $sum_price1 = 0;
                 $sum_weight = 0;
@@ -501,53 +508,41 @@ class Tray extends BaseModel
                     $unit_price = getGarbagePrice($value['garbageid'],$value['danweiming'], new GarbagePrice());
                     if ($unit_price['status'] == 0) {
                         $returnData['msg'] = '获取报价失败';
-//                return $returnData;
                         $sum_price1 = 0;
                         $returnData['status'] = 0;
                         $returnData['price'] = $sum_price1;
-                        return $returnData;
+                        BackData("400","获取报价失败");
                     } else {
                         if ($value['weighting_num'] != ""&&$value['weighting_num'] != 0) {  //重量
-                            $sum_price1 = bcmul($value['weighting_num'], $unit_price['data']['number'], 1);
+                            $sum_price1 += bcmul($value['weighting_num'], $unit_price['data']['number'], 1);
                             $sum_number += (int)$value['weighting_num'];
                         }
                     }
-
                 }
                 //生成id
                 $data1['isbaozhi'] = 0;
                 $data1['price'] = $sum_price1;
                 $data1['znumber'] = $sum_number;
-//                $data1['zweight'] = $sum_weight;
                 $data1['type'] = 6;
-                $data1['user_id'] = $user['userInfo']['id'];
-                $data1['username'] = $user['userInfo']['zhicheng'];
-                $data1['status'] = 2;
+                $data1['status'] = 3;
                 $data1['create_time'] = time();
-                $data1['uuser'] = $user['userInfo']['upid'];
-                $data1['latitude'] = $user['userInfo']['latitude'];
-                $data1['longitude'] = $user['userInfo']['longitude'];
-                $data1['otype']=1;
                 $data1['ordernumber'] = createOrderSn();
                 $orderm = new Order();
-                $ocont['ordernumber']=$post['orderid'];
+                $ocont['id']=$post['id'];
                 $res = $orderm->MUpdate($ocont,$data1);
                 if ($res) {
-                    $cgarbageo['outorderid'] = $res;
+                    $cgarbageo['outorderid'] = $post['id'];
                     $res2 = $garbageoM->MUpdate($where, $cgarbageo);
                     $gres1 = $garbageoM->MUpdate($where, $data);
                     $twhere['id']=$post['id'];
-                    $trayinfo=$this->MFind($twhere);
-                    $rtwhere['id']=$trayinfo['id'];
-                    $rtwhere['cnumber']=$trayinfo['cnumber'];
-                    $rtwhere['cweight']=$trayinfo['cweight'];
-                    $traydata['cnumber']=$trayinfo['cnumber']-$sum_number;
-//                    $traydata['cweight']=$trayinfo['cweight']-$sum_weight;
-                    if($traydata['cnumber']>=0){
-                        $res3=$this->MUpdate($rtwhere,$traydata);
-//                        $data1['znumber'] = $sum_number;
-//                        $data1['zweight'] = $sum_weight;
-                        if ($res2&&$gres1&&$res3) {
+//                    $trayinfo=$this->MFind($twhere);
+//                    $rtwhere['id']=$trayinfo['id'];
+//                    $rtwhere['cnumber']=$trayinfo['cnumber'];
+//                    $rtwhere['cweight']=$trayinfo['cweight'];
+//                    $traydata['cnumber']=$trayinfo['cnumber']-$sum_number;
+//                    if($traydata['cnumber']>=0){
+//                        $res3=$this->MUpdate($rtwhere,$traydata);
+                        if ($res2&&$gres1) {
                             $this->commit();
                             return $res2;
                         } else {
@@ -555,11 +550,11 @@ class Tray extends BaseModel
                             $this->error = "添加失败";
                             return false;
                         }
-                    }else{
-                        $this->rollback();
-                        $this->error = "添加失败";
-                        return false;
-                    }
+//                    }else{
+//                        $this->rollback();
+//                        $this->error = "添加失败";
+//                        return false;
+//                    }
                 } else {
                     $this->rollback();
                     $this->error = "添加失败";
@@ -573,6 +568,141 @@ class Tray extends BaseModel
             $this->error="参数错误";
             return false;
         }
+    }
+//    public function OrderAdd()
+//    {
+//
+//        $post=Request::post();
+//        (new TokenValidate())->goCheck($post);
+//        $user=session($post['token']);
+//        if(array_key_exists("ids",$post)){
+//            $post['ids']=json_decode($post['ids']);
+//            if(!is_array($post['ids'])){
+//                $this->error="参数错误";
+//                return false;
+//            }
+//            $garbageoM = new GarbageOrder();
+//            $where['id'] = $post['ids'];
+//            $where['is_shangjiao'] = 0;
+//            $data['is_shangjiao'] = 1;
+//            $this->startTrans();
+//            $gres = $garbageoM->MSelect($where);
+//            if($gres){
+//                $sum_price1 = 0;
+//                $sum_weight = 0;
+//                $sum_number = 0;
+//                foreach ($gres as $key => $value) {
+//                    $unit_price = getGarbagePrice($value['garbageid'],$value['danweiming'], new GarbagePrice());
+//                    if ($unit_price['status'] == 0) {
+//                        $returnData['msg'] = '获取报价失败';
+//                        $sum_price1 = 0;
+//                        $returnData['status'] = 0;
+//                        $returnData['price'] = $sum_price1;
+//                        return $returnData;
+//                    } else {
+//                        if ($value['weighting_num'] != ""&&$value['weighting_num'] != 0) {  //重量
+//                            $sum_price1 = bcmul($value['weighting_num'], $unit_price['data']['number'], 1);
+//                            $sum_number += (int)$value['weighting_num'];
+//                        }
+//                    }
+//
+//                }
+//                //生成id
+//                $data1['isbaozhi'] = 0;
+//                $data1['price'] = $sum_price1;
+//                $data1['znumber'] = $sum_number;
+//                $data1['type'] = 6;
+//                $data1['user_id'] = $user['userInfo']['id'];
+//                $data1['username'] = $user['userInfo']['zhicheng'];
+//                $data1['status'] = 2;
+//                $data1['create_time'] = time();
+//                $data1['uuser'] = $user['userInfo']['upid'];
+//                $data1['latitude'] = $user['userInfo']['latitude'];
+//                $data1['longitude'] = $user['userInfo']['longitude'];
+//                $data1['otype']=1;
+//                $data1['ordernumber'] = createOrderSn();
+//                $orderm = new Order();
+//                $ocont['ordernumber']=$post['orderid'];
+//                $res = $orderm->MUpdate($ocont,$data1);
+//                if ($res) {
+//                    $cgarbageo['outorderid'] = $res;
+//                    $res2 = $garbageoM->MUpdate($where, $cgarbageo);
+//                    $gres1 = $garbageoM->MUpdate($where, $data);
+//                    $twhere['id']=$post['id'];
+//                    $trayinfo=$this->MFind($twhere);
+//                    $rtwhere['id']=$trayinfo['id'];
+//                    $rtwhere['cnumber']=$trayinfo['cnumber'];
+//                    $rtwhere['cweight']=$trayinfo['cweight'];
+//                    $traydata['cnumber']=$trayinfo['cnumber']-$sum_number;
+//                    if($traydata['cnumber']>=0){
+//                        $res3=$this->MUpdate($rtwhere,$traydata);
+//                        if ($res2&&$gres1&&$res3) {
+//                            $this->commit();
+//                            return $res2;
+//                        } else {
+//                            $this->rollback();
+//                            $this->error = "添加失败";
+//                            return false;
+//                        }
+//                    }else{
+//                        $this->rollback();
+//                        $this->error = "添加失败";
+//                        return false;
+//                    }
+//                } else {
+//                    $this->rollback();
+//                    $this->error = "添加失败";
+//                    return false;
+//                }
+//            }else {
+//                $this->error = "参数错误";
+//                return false;
+//            }
+//        }else{
+//            $this->error="参数错误";
+//            return false;
+//        }
+//    }
+    //删除垃圾
+    public function DeleteOne(){
+        $post=Request::post();
+        (new TokenValidate())->goCheck($post);
+        $mcont['token']=$post['token'];
+        $tres=$this->MFind($mcont);
+        if($tres&&$tres['del']==0){
+            if($this->DeleteValidate($tres['id'])){
+                $res=$this->MDelete($mcont);
+                if($res){
+                    return $res;
+                }else{
+                    $this->error="删除失败";
+                    return false;
+                }
+            }else{
+                $this->error="此仓库中有垃圾不能删除";
+                return false;
+            }
+        }else{
+            $this->error="此托盘不存在";
+            return false;
+        }
+    }
+    //判断能不能删除
+    public function DeleteValidate($trayid){
+        $orderM=new Order();
+        $garbageorderM=new GarbageOrder();
+        $ocont['trayid']=$trayid;
+        $orderlist=$orderM->MSelect($ocont);
+        foreach($orderlist as $key => $value){
+            $garbagecont['orderid']=$value['id'];
+            $garbagecont['is_shangjiao']=0;
+            $garbagecont['outend']=0;
+            $garbageinfo=$garbageorderM->MFind($garbagecont);
+            if($garbageinfo){
+                return false;
+            }
+        }
+        return true;
     }
     //主管出库操作
 //    public function zhuOutOrder($post){

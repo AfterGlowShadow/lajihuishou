@@ -124,7 +124,7 @@ class User extends BaseModel
             $upuser=session($post['token'])['userInfo'];
             $data['token'] = md5(time());
             $data['pwd'] = md5($post['pwd']);
-            $data['region'] = $upuser['county'];
+            $data['region'] = $upuser['region'];
             $data['upid'] = $upuser['id'];
             $data['name'] = $post['name'];
             $data['realname'] = $post['realname'];

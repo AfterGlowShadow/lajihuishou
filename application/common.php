@@ -329,16 +329,15 @@ function getGarbagePrice($ids = "",$danweiming, $Model)
         if(count($ids_arr)>1){
             $end=end($ids_arr);
             $gwhere['danweiming']=$danweiming;
-            $gwhere['garbageid']=$end;
-            $endinfo=$garbageum->MFind($gwhere);
-
-            $gwhere['danweiming']='kg';
             $gwhere['garbageid']=$ids_arr[0];
+            $endinfo=$garbageum->MFind($gwhere);
+            $gwhere['danweiming']='kg';
+            $gwhere['garbageid']=$ids_arr[1];
             $garbageuinfo=$garbageum->MFind($gwhere);
             $res=array();
             if($garbageuinfo){
                 $where = [];
-                $where[] = ['garbageid', '=', $ids_arr[$key]];
+                $where[] = ['garbageid', '=', $ids_arr[1]];
                 $where[] = ['regionz', '=', $region];
                 $where[]=['garbageunitid','=',$garbageuinfo['id']];
                 if ($user['userInfo']['groupid'] < 3 && $user['userInfo']['daili'] == 1) {
@@ -347,16 +346,16 @@ function getGarbagePrice($ids = "",$danweiming, $Model)
                 }
                 $res = $Model->MFind($where, '');
                 if($res){
-                    $res['garbageunitid'] = $garbageuinfo['id'];
+                    $res['garbageunitid'] = $endinfo['id'];
                     if ($user['userInfo']['groupid'] < 3 && $user['userInfo']['daili'] == 1) {
-                        $res['number'] = $res['dlnumber'];
+                        $res['number'] = $res['dlnumber']*$endinfo['transweight'];
                     }else{
-                        $res['number'] = $res['number'];
+                        $res['number'] = $res['number']*$endinfo['transweight'];
                     }
                 }
             }
             if(!empty($res)){
-                $res['trans']=$garbageuinfo['transweight'];
+                $res['trans']=$endinfo['transweight'];
                 $returnData = array('status' => 1 ,'data' => $res);
                 return $returnData;
             }else{

@@ -268,6 +268,7 @@ class Garbage extends BaseModel
     {
         $regionG=new RegionGroup();
         $GarbagePrice=new GarbagePrice();
+        $garbageunitM=new GarbageUnit();
         foreach($data as $key => $value){
             $where['garbageid']=$value['id'];
             $where['status']=1;
@@ -289,6 +290,7 @@ class Garbage extends BaseModel
 //                    $price=$GarbagePrice->MBetweenTimeS($where,"");
                         $price = Db::query("select * from lj_garbageprice where garbageunitid=".$v['id']." and regionz=".$post['regionz']." and status=1 and del=0 and ((start_time<=".strtotime($post['start_time'])." and ".strtotime($post['start_time'])."<=end_time)  or (start_time<=".strtotime($post['end_time'])." and ".strtotime($post['end_time'])."<=end_time))  order by id desc  limit ".$post['page'].",".$post['list_rows']);
                     }else{
+                        $where['garbageunitid']=$v['id'];
                         $price=$GarbagePrice->MFHTime($where,"");
                     }
                 }else{
@@ -325,19 +327,41 @@ class Garbage extends BaseModel
                         $data[$key]['danwei'][$k]['price']=0;
                     }else{
                         //不是最顶级垃圾 找上级是否有同名
-                        $where['danweiming']=$v['danweiming'];
-                        $where['id']=$value['pga'];
-                        $garbageinfo=$regionG->MFind($where);
-                        //上级存在就按上级的下个算
-                        if($garbageinfo){
-
+                        if($v['danweiming']=='kg'){
+                            $pgawhere['garbageid']=$value['pga'];
+                            $pgawhere['danweiming']='kg';
+                            $garbageunitinfo=$garbageunitM->MFind($pgawhere);
+                            $where['garbageunitid']=$garbageunitinfo['id'];
+                            $where['garbageid']=$value['pga'];
+                            $price=$GarbagePrice->MLimitSelect($where,$config,"id desc");
+                            if($price['data']){
+                                $data[$key]['danwei'][$k]['price']=$price['data'][0]['number'];
+                            }else{
+                                $data[$key]['danwei'][$k]['price']=0;
+                            }
                         }else{
-                            //上级不存在 兑换成重量并查看本级是否有价格 没有查询上级价格
+                            $where1['danweiming']=$v['danweiming'];
+                            $where1['id']=$value['pga'];
+                            $garbageinfo=$garbageunitM->MFind($where1);
+                            //上级存在就按上级的下个算
+                            if($garbageinfo){
+                                $data[$key]['danwei'][$k]['price']=$garbageinfo['number'];
+                            }else{
+                                //上级不存在 兑换成重量并查看本级是否有价格 没有查询上级价格
+                                $pgawhere['garbageid']=$value['pga'];
+                                $pgawhere['danweiming']='kg';
+                                $garbageunitinfo=$garbageunitM->MFind($pgawhere);
+                                $where['garbageunitid']=$garbageunitinfo['id'];
+                                $where['garbageid']=$value['pga'];
+                                $price=$GarbagePrice->MLimitSelect($where,$config,"id desc");
+                                if($price['data']){
+                                    $data[$key]['danwei'][$k]['price']=$price['data'][0]['number']*$v['transweight'];
+                                }else{
+                                    $data[$key]['danwei'][$k]['price']=0;
+                                }
+                            }
                         }
                     }
-                    print_r($value);
-                    exit;
-//                    unset($data[$key]);
                 }
             }
         }
