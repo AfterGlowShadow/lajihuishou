@@ -246,7 +246,30 @@ class Garbage extends BaseModel
             $user=session($post['token']);
             $post['regionz']=$user['userInfo']['region'];
         }
-        $res['data']=$this->GetPrice($res['data'],$post);
+//        if(array_key_exists("status",$post)&&$post['status']==1){
+            $res['data']=$this->GetPrice($res['data'],$post);
+//        }else{
+//            $res['data']=$this->GetPriceM($res['data'],$post);
+//        }
+        return $res;
+    }
+    //门店查询报价
+    public function GetPriceM($res,$post){
+        foreach ($res as $key => $value){
+            foreach ($value['danwei'] as $k => $v){
+                $tempres=getGarbagePrice($v['garbageid'],$v['danweiming'],new GarbagePrice());
+                print_r($tempres);
+                if($tempres['status'] == 0) {
+                    $res[$key]['danwei'][$k]['price']=0;
+                }else{
+                    if($tempres['data']['number']!=""){
+                        $res[$key]['danwei'][$k]['price']=$tempres['data']['number'];
+                    }else{
+                        $res[$key]['danwei'][$k]['price']=0;
+                    }
+                }
+            }
+        }
         return $res;
     }
     //查询所有信息
@@ -333,9 +356,10 @@ class Garbage extends BaseModel
                             $garbageunitinfo=$garbageunitM->MFind($pgawhere);
                             $where['garbageunitid']=$garbageunitinfo['id'];
                             $where['garbageid']=$value['pga'];
-                            $price=$GarbagePrice->MLimitSelect($where,$config,"id desc");
-                            if($price['data']){
-                                $data[$key]['danwei'][$k]['price']=$price['data'][0]['number'];
+//                            $price=$GarbagePrice->MLimitSelect($where,$config,"id desc");
+                            $price=$GarbagePrice->MFHTime($where,"");
+                            if($price){
+                                $data[$key]['danwei'][$k]['price']=$price[0]['number'];
                             }else{
                                 $data[$key]['danwei'][$k]['price']=0;
                             }
@@ -353,9 +377,10 @@ class Garbage extends BaseModel
                                 $garbageunitinfo=$garbageunitM->MFind($pgawhere);
                                 $where['garbageunitid']=$garbageunitinfo['id'];
                                 $where['garbageid']=$value['pga'];
-                                $price=$GarbagePrice->MLimitSelect($where,$config,"id desc");
-                                if($price['data']){
-                                    $data[$key]['danwei'][$k]['price']=$price['data'][0]['number']*$v['transweight'];
+//                                $price=$GarbagePrice->MLimitSelect($where,$config,"id desc");
+                                $price=$GarbagePrice->MFHTime($where,"");
+                                if($price){
+                                    $data[$key]['danwei'][$k]['price']=$price[0]['number']*$v['transweight'];
                                 }else{
                                     $data[$key]['danwei'][$k]['price']=0;
                                 }

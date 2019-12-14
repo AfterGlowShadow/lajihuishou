@@ -483,6 +483,11 @@ Route::group('api', function () {
              */
             Route::post("getoneS", 'home/User/GetOne');
             /**
+             * @name 转移门店
+             * @menu 前台用户管理
+             */
+            Route::post("transferuser", 'home/User/TransferUser');
+            /**
              * @name 获取用户列表
              * @menu 前台用户管理
              */

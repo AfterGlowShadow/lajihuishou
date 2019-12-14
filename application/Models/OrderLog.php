@@ -28,7 +28,6 @@ class OrderLog extends BaseModel
 //                $where[] = ['status', '<=', 2];
 //            }
 //        }
-
         if(array_key_exists("jifen",$post)&&$post['jifen']!=""){
             $where[] = ['jifen', '=', $post['jifen']];
         }else{
@@ -44,12 +43,13 @@ class OrderLog extends BaseModel
 //        exit;
 //        $where[] = ['status', '=', 2];
         $where[] = ['userid', '=', $userid];
-        if($search!=""){
+        if(!empty($search)){
             $res=$this->MBetweenTimeS($where,'addtime',$search['starttime'],$search['endtime'],$config,"id desc",$field="");
         }else{
             $res=$this->MLimitSelect($where,$config,"id desc");
         }
         if($res){
+            $res['sum']=0;
             foreach ($res['data'] as $key => $value){
                 if($value['status']==1){
                     $oserM=new Order();
@@ -58,6 +58,7 @@ class OrderLog extends BaseModel
                     if($order){
                         $res['data'][$key]['ordernum']=$order['ordernumber'];
                         $res['data'][$key]['price']=$order['price'];
+                        $res['sum']+=$order['price'];
                         $res['data'][$key]['orderstatus']=$order['status'];
                     }else{
                         $res['data'][$key]['ordernum']="";

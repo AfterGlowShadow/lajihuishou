@@ -29,7 +29,7 @@ class OrderCalculation extends BaseModel
      * ]
      * @return array
      */
-    public function Calculation($garbagelist)
+    public function Calculation($garbagelist,$orderinfo="")
     {
         $sum_price = 0;
         $sum_number = 0;
@@ -40,7 +40,7 @@ class OrderCalculation extends BaseModel
         $returnData = ['status' => 0, 'data' => [], 'msg' => ''];
         foreach ($garbagelist as $k => $v) {
             //根据数量计算价格
-            $unit_price = getGarbagePrice($v['garbageid'],$v['danweiming'], new GarbagePrice());
+            $unit_price = getGarbagePrice($v['garbageid'],$v['danweiming'], new GarbagePrice(),$orderinfo);
             if(isset($v['id'])){
                 $garbageOrderList[$k]['id'] = $v['id'] ? $v['id'] : '';
             }else{
@@ -98,8 +98,8 @@ class OrderCalculation extends BaseModel
         $order_detail = [];
         $detail_res = [];
         $orderDetailModel = new GarbageOrder();
-
         foreach ($orderlist as $k => $v) {
+
             $zprice=0;
             $_where = [];
             $_where[] = ['orderid', '=', $v['id']];
@@ -122,7 +122,7 @@ class OrderCalculation extends BaseModel
 //            print_r($order_detail);
 //            exit;
             if ($v['isbaozhi'] == 0) {
-                $detail_res = $this->Calculation($order_detail);
+                $detail_res = $this->Calculation($order_detail,$v);
                 if ($detail_res['status'] == 0) {
                     return $detail_res;
                 }

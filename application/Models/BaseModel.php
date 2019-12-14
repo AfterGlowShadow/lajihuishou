@@ -79,6 +79,20 @@ class BaseModel extends Pivot{
             return "";
         }
     }
+    //聚合函数
+    public function MSumPrice($where,$search){
+        $res="";
+        if(!empty($search)){
+            $res=Db::table($this->table)
+                ->whereBetweenTime("addtime", $search['starttime'], $search['endtime'])->where($where)
+                ->sum('jfprice');
+        }else{
+            $res=Db::table($this->table)
+                ->where($where)
+                ->sum('jfprice');
+        }
+        return $res;
+    }
     //带时间的查询一个数据
     public function MgetOneByTime($mcont,$time,$field="")
     {

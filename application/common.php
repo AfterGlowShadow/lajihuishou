@@ -15,6 +15,7 @@ use app\admin\controller\Push;
 use app\Models\City;
 use app\Models\Garbage;
 use app\Models\GarbageUnit;
+use app\Models\User;
 use think\facade\Request;
 
 function BackData($code, $msg, $data = "", $type = JSON_UNESCAPED_UNICODE)
@@ -268,7 +269,7 @@ function GetArray($name = "redisarray")
  * @param String $ids 垃圾分类  1,2,3,4
  * @param \think\Model $Model garbageprice
  */
-function getGarbagePrice($ids = "",$danweiming, $Model)
+function getGarbagePrice($ids = "",$danweiming, $Model,$orderinfo="")
 {
     $post = Request::post();
     $return = array('status' => 0, 'data' => array());
@@ -278,8 +279,14 @@ function getGarbagePrice($ids = "",$danweiming, $Model)
     $returnData =  array('status' => 1 ,'data' => array());
     $ids_arr = explode(',', $ids);
     $user=session($post['token']);
-    $region = session($post['token'])['userInfo']['region'];
-//    print_r($ids_arr);
+    if($user['userInfo']['groupid']>3){
+        $ucont['id']=$orderinfo['user_id'];
+        $userM=new User();
+        $user1=$userM->MFind($ucont);
+        $region = $user1['region'];
+    }else{
+        $region = session($post['token'])['userInfo']['region'];
+    }
     $cityM=new City();
     $cwhere['id']=$region;
     $cityinfo=$cityM->MFind($cwhere);
@@ -299,6 +306,9 @@ function getGarbagePrice($ids = "",$danweiming, $Model)
                     if ($user['userInfo']['groupid'] < 3 && $user['userInfo']['daili'] == 1) {
                         $where[] = ['dlstarttime', 'lt', time()];
                         $where[] = ['dlendtime', 'gt', time()];
+                    }else{
+                        $where[] = ['start_time', 'lt', time()];
+                        $where[] = ['end_time', 'gt', time()];
                     }
                     $res = $Model->MFind($where, '');
                     if($res){
@@ -319,51 +329,72 @@ function getGarbagePrice($ids = "",$danweiming, $Model)
                 return $returnData;
 //                break;
             }
-            $cwhere1['pid'] = $cityinfo['id'];
+            $cwhere1['id'] = $cityinfo['pid'];
             $cityinfo = $cityM->MFind($cwhere1);
             if ($cityinfo) {
                 $region = $cityinfo['id'];
             }
         }while($cityinfo);
-        //没有这个单位 就获取这个单位详情和上级kg价格(因为就两级所以就是第一个与最后一个)
-        if(count($ids_arr)>1){
-            $end=end($ids_arr);
-            $gwhere['danweiming']=$danweiming;
-            $gwhere['garbageid']=$ids_arr[0];
-            $endinfo=$garbageum->MFind($gwhere);
-            $gwhere['danweiming']='kg';
-            $gwhere['garbageid']=$ids_arr[1];
-            $garbageuinfo=$garbageum->MFind($gwhere);
-            $res=array();
-            if($garbageuinfo){
-                $where = [];
-                $where[] = ['garbageid', '=', $ids_arr[1]];
-                $where[] = ['regionz', '=', $region];
-                $where[]=['garbageunitid','=',$garbageuinfo['id']];
-                if ($user['userInfo']['groupid'] < 3 && $user['userInfo']['daili'] == 1) {
-                    $where[] = ['dlstarttime', 'lt', time()];
-                    $where[] = ['dlendtime', 'gt', time()];
-                }
-                $res = $Model->MFind($where, '');
-                if($res){
-                    $res['garbageunitid'] = $endinfo['id'];
+        if($user['userInfo']['groupid']>3){
+            $ucont['id']=$orderinfo['user_id'];
+            $userM=new User();
+            $user1=$userM->MFind($ucont);
+            $region = $user1['region'];
+        }else{
+            $region = session($post['token'])['userInfo']['region'];
+        }
+        $cityM=new City();
+        $cwhere['id']=$region;
+        $cityinfo=$cityM->MFind($cwhere);
+        if($cityinfo){
+            //没有这个单位 就获取这个单位详情和上级kg价格(因为就两级所以就是第一个与最后一个)
+            if(count($ids_arr)>1){
+                $end=end($ids_arr);
+                $gwhere['danweiming']=$danweiming;
+                $gwhere['garbageid']=$ids_arr[0];
+                $endinfo=$garbageum->MFind($gwhere);
+                $gwhere['danweiming']='kg';
+                $gwhere['garbageid']=$ids_arr[1];
+                $garbageuinfo=$garbageum->MFind($gwhere);
+                $res=array();
+                if($garbageuinfo){
+                    $where = [];
+                    $where[] = ['garbageid', '=', $ids_arr[1]];
+                    $where[] = ['regionz', '=', $region];
+                    $where[]=['garbageunitid','=',$garbageuinfo['id']];
                     if ($user['userInfo']['groupid'] < 3 && $user['userInfo']['daili'] == 1) {
-                        $res['number'] = $res['dlnumber']*$endinfo['transweight'];
+                        $where[] = ['dlstarttime', 'lt', time()];
+                        $where[] = ['dlendtime', 'gt', time()];
                     }else{
-                        $res['number'] = $res['number']*$endinfo['transweight'];
+                        $where[] = ['start_time', 'lt', time()];
+                        $where[] = ['end_time', 'gt', time()];
+                    }
+                    $res = $Model->MFind($where, '');
+                    if($res){
+                        $res['garbageunitid'] = $endinfo['id'];
+                        if ($user['userInfo']['groupid'] < 3 && $user['userInfo']['daili'] == 1) {
+                            $res['number'] = $res['dlnumber']*$endinfo['transweight'];
+                        }else{
+                            $res['number'] = $res['number']*$endinfo['transweight'];
+                        }
                     }
                 }
-            }
-            if(!empty($res)){
-                $res['trans']=$endinfo['transweight'];
-                $returnData = array('status' => 1 ,'data' => $res);
-                return $returnData;
+                if(!empty($res)){
+                    $res['trans']=$endinfo['transweight'];
+                    $returnData = array('status' => 1 ,'data' => $res);
+                    return $returnData;
+                }else{
+                    return $return;
+                }
             }else{
                 return $return;
             }
-        }else{
-            return $return;
-        }
+            $cwhere1['id'] = $cityinfo['pid'];
+            $cityinfo = $cityM->MFind($cwhere1);
+            if ($cityinfo) {
+                $region = $cityinfo['id'];
+            }
+        }while($cityinfo);
     }
 //    for ($i = count($ids_arr) - 1; $i >= 0; $i--) {
 //        $where = [];

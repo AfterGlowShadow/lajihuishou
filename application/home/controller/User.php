@@ -140,4 +140,14 @@ class User extends BaseController
         $res=$this->Model->GetAllUser();
         Back($res,"查询成功",$this->Model->getError());
     }
+    /**
+     * name: 转移门店(没有分页)
+     * User: Administrator
+     * Date: 2019-11-07 17:26
+     */
+    public function TransferUser()
+    {
+        $res=$this->Model->TransferUser();
+        Back($res,"查询成功",$this->Model->getError());
+    }
 }

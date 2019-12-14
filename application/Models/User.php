@@ -348,7 +348,7 @@ class User extends BaseModel
         $post = Request::post();
         (new UserChange())->goCheck($post);
         $mcont['name'] = $post['name'];
-        $mcont['status'] = 1;
+        $mcont['status'] = 2;
         $mcont['del'] = 0;
         $fadmin = $this->MFind($mcont);
         $token['token'] = $post['token'];
@@ -401,7 +401,7 @@ class User extends BaseModel
         $post = Request::post();
         (new UserChange())->goCheck($post);
         $mcont['name'] = $post['name'];
-        $mcont['status'] = 1;
+        $mcont['status'] = 2;
         $mcont['del'] = 0;
         $user = session("user");
         $fadmin = $this->MFind($mcont);
@@ -441,6 +441,10 @@ class User extends BaseModel
         if(array_key_exists("token",$post)&&$post['token']!=""){
             $user=session($post['token']);
             if($user['userInfo']['groupid']==3){
+                $where['groupid']=1;
+                $where['upid']=$user['userInfo']['id'];
+            }
+            if($user['userInfo']['groupid']==2){
                 $where['groupid']=1;
                 $where['upid']=$user['userInfo']['id'];
             }
@@ -776,7 +780,6 @@ class User extends BaseModel
             return false;
         }
     }
-
     //根据类型获得
     public function GetTypeList($type, $userid = "", $findusername = "")
     {
@@ -793,7 +796,6 @@ class User extends BaseModel
         $res = $this->MLimitSelect($where, $config);
         return $res;
     }
-
     //根据id修改用户信息
     public function UpdateOneById()
     {
@@ -860,7 +862,6 @@ class User extends BaseModel
 //            return false;
 //        }
 //    }
-
     //审核
     public function Confirm()
     {
@@ -876,6 +877,21 @@ class User extends BaseModel
                 }
             }
             $where['token'] = $post['token'];
+            if(array_key_exists("saleid",$post)&&$post['saleid']!=""){
+                $data['upid']=$post['saleid'];
+            }
+            if(array_key_exists("address",$post)&&$post['address']!=""){
+                $data['address']=$post['address'];
+            }
+            if(array_key_exists("region",$post)&&$post['region']!=""){
+                $data['region']=$post['region'];
+            }
+            if(array_key_exists("longitude",$post)&&$post['longitude']!=""){
+                $data['longitude']=$post['longitude'];
+            }
+            if(array_key_exists("latitude",$post)&&$post['latitude']!=""){
+                $data['latitude']=$post['latitude'];
+            }
             $res = $this->MUpdate($where, $data);
             if ($res) {
                 return $res;
@@ -888,7 +904,6 @@ class User extends BaseModel
             return false;
         }
     }
-
     //根据用户获取账号
     public function GetByUser()
     {
@@ -919,7 +934,6 @@ class User extends BaseModel
             return false;
         }
     }
-
     public function ForgetPass()
     {
         $post=Request::post();
@@ -1089,7 +1103,6 @@ class User extends BaseModel
             return false;
         }
     }
-
     //查询所有账号
     public function GetAllUser(){
         $post=Request::post();
@@ -1118,6 +1131,30 @@ class User extends BaseModel
             }
         }else{
             $this->error="权限不足";
+            return false;
+        }
+    }
+    public function TransferUser(){
+        $post=Request::post();
+        (new TokenValidate())->goCheck($post);
+        $user=session($post['token']);
+        if($user['userInfo']['groupid']>=3){
+            if($post['touserid']!=""&&$post['userid']!=""){
+                $where['id']=$post['userid'];
+                $data['upid']=$post['touserid'];
+                $res=$this->MUpdate($where,$data);
+                if($res){
+                    return $res;
+                }else{
+                    $this->error="修改失败";
+                    return false;
+                }
+            }else{
+                $this->error="缺少必要参数";
+                return false;
+            }
+        }else{
+            $this->error="权限不够";
             return false;
         }
     }

@@ -54,7 +54,8 @@ class Order extends BaseModel
                         $whereor[]=['uuser','=',$user['userInfo']['id']];
                         $whereor[]=['status','=',$post['status']];
                     }else{
-                        BackData("200","没有数据");
+                        $where[]=['uuser','=',$user['userInfo']['id']];
+//                        BackData("200","没有数据");
                     }
                 }
             } elseif (isset($post['is_shangjiao'])) { //门店
@@ -74,12 +75,15 @@ class Order extends BaseModel
                 }else{
                     $userM=new User();
                     $fuwhere['upid']=$user['userInfo']['id'];
+                    $fuwhere['groupid']=2;
                     $userlist=$userM->MSelect($fuwhere);
                     if($userlist){
                         $userarray=$this->getid($userlist);
                         $where[]=['user_id','in',$userarray];
+                        $where[]=['uuser','in',$user['userInfo']['id']];
                     }else{
-                        BackData("200","没有数据");
+                        $where[]=['uuser','in',$user['userInfo']['id']];
+//                        BackData("200","没有数据");
                     }
                 }
             } elseif (isset($post['shop_id'])) { //门店订单
@@ -89,12 +93,17 @@ class Order extends BaseModel
                 }else{
                     $userM=new User();
                     $fuwhere['upid']=$user['userInfo']['id'];
+                    $fuwhere['groupid']=1;
                     $userlist=$userM->MSelect($fuwhere);
                     if($userlist){
                         $userarray=$this->getid($userlist);
                         $where[]=['user_id','in',$userarray];
+                        $where[]=['uuser','=',$user['userInfo']['id']];
+                        $whereor[]=['uuser','=',$user['userInfo']['id']];
+                        $whereor[] = ['status', '=', $post['status']];
                     }else{
-                        BackData("200","没有数据");
+                        $where[]=['uuser','=',$user['userInfo']['id']];
+//                        BackData("200","没有数据");
                     }
                 }
                 $where[] = ['status', '=', $post['status']];
@@ -637,7 +646,7 @@ class Order extends BaseModel
                 $_where[] = ['del', '=', 0];
                 $order_detail = $orderDetailModel->MSelect($_where, 'id desc', 'id,orderid,garbageid ,weighting_num,weighting_method,danweiming,garbageunitid');
                 if ($res['isbaozhi'] == 0) {
-                    $detail_res = (new OrderCalculation())->Calculation($order_detail);
+                    $detail_res = (new OrderCalculation())->Calculation($order_detail,$res);
 
                     if ($detail_res['status'] == 0) {
                         $this->error = $detail_res['msg'];
@@ -656,7 +665,7 @@ class Order extends BaseModel
                         $res['detail'][$key]['garbagename']=$garbageinfo['name'];
                         $res['detail'][$key]['garbagepgalist']=$garbageinfo['pgalist'];
                         $res['detail'][$key]['garbagepga']=$garbageinfo['pga'];
-                        $tempres=getGarbagePrice($garbageinfo['pgalist'],$value['danweiming'],new GarbagePrice());
+                        $tempres=getGarbagePrice($garbageinfo['pgalist'],$value['danweiming'],new GarbagePrice(),$res);
                         if($tempres['status'] == 0) {
                             $temp['price']=0;
                         }else{
@@ -1162,12 +1171,13 @@ class Order extends BaseModel
         }
         $config['page']=$post['page'];
         $config['list_rows']=$post['list_rows'];
-        $search="";
+        $search=array();
         if(array_key_exists("starttime",$post)&&$post['starttime']!=""){
             $search['starttime']=$post['starttime'];
         }if(array_key_exists("endtime",$post)&&$post['endtime']!=""){
             $search['endtime']=$post['endtime'];
         }
+
         $res=$orderlog->GetOrderLog($userid,$config,$search,$post);
         if($res){
             return $res;
