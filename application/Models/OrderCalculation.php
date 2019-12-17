@@ -38,15 +38,45 @@ class OrderCalculation extends BaseModel
         $retrospect_model = new Retrospect();
         $sum_price1=0;
         $returnData = ['status' => 0, 'data' => [], 'msg' => ''];
+        if(!empty($garbagelist)&&array_key_exists(0,$garbagelist)&&array_key_exists("id",$garbagelist[0])){
+            $garbageorderM=new GarbageOrder();
+            $garbageordercont['id']=$garbagelist[0]['id'];
+            $garbageorder=$garbageorderM->MFind($garbageordercont);
+            if($garbageorder){
+                $orderM=new Order();
+                $ordercont['id']=$garbageorder['orderid'];
+                $order=$orderM->MFind($ordercont);
+                if($order){
+                    if($order['isbaozhi']==1){
+                        $temp=array();
+                        $temp['znumner']=0;
+                        $temp['price']=0;
+                        $detail=array();
+                        foreach ($garbagelist as $key => $value){
+                            $garbageordercont['id']=$value['id'];
+                            $garbageorder=$garbageorderM->MFind($garbageordercont);
+                            $garbageorder['weighting_num']=$value['weighting_num'];
+                            array_push($detail,$garbageorder);
+                            $temp['znumner']+=$value['weighting_num'];
+                            $temp['price']+=$value['weighting_num']*$garbageorder['bprice'];
+                        }
+                        $temp['detail']=$detail;
+                        $returnData = ['status' => 1, 'data' => $temp];
+                        return $returnData;
+                    }
+                }
+            }
+        }
         foreach ($garbagelist as $k => $v) {
             //根据数量计算价格
             $unit_price = getGarbagePrice($v['garbageid'],$v['danweiming'], new GarbagePrice(),$orderinfo);
+//            print_r($unit_price);
             if(isset($v['id'])){
                 $garbageOrderList[$k]['id'] = $v['id'] ? $v['id'] : '';
             }else{
                 $garbageOrderList[$k]['id']="";
             }
-            $garbageOrderList[$k]['weighting_num'] = $v['weighting_num'];
+//            $garbageOrderList[$k]['weighting_num'] = $v['weighting_num'];
             $garbageOrderList[$k]['garbageid'] = $v['garbageid'];
             if(isset($v['stock_id'])){
                 $garbageOrderList[$k]['stock_id'] = $v['stock_id'];
@@ -59,10 +89,13 @@ class OrderCalculation extends BaseModel
                 $returnData['price']=$sum_price1;
                 return $returnData;
             } else {
-                $garbageOrderList[$k]['danweiming']=$v['danweiming'];
+                $garbageOrderList[$k]['danweiming']=$unit_price['data']['danweiming'];
                 $garbageOrderList[$k]['garbageunitid']=$unit_price['data']['garbageunitid'];
-                    $sum_price1 = bcmul($v['weighting_num'], $unit_price['data']['number'], 1);
-                    $sum_number += (int)$v['weighting_num'];
+//                $garbageOrderList[$k]['trans']=$unit_price['data']['trans'];
+                $garbageOrderList[$k]['bprice']=$unit_price['data']['bnumber'];
+                $garbageOrderList[$k]['weighting_num'] = $v['weighting_num']*$unit_price['data']['trans'];
+                $sum_price1 = bcmul($v['weighting_num'], $unit_price['data']['number'], 1);
+                $sum_number += (int)$v['weighting_num']*$unit_price['data']['trans'];
             }
             $garbageOrderList[$k]['price']=$sum_price1;
             $sum_price += $sum_price1;
@@ -220,6 +253,7 @@ class OrderCalculation extends BaseModel
                     if ($v['weighting_num'] != ""&&$v['weighting_num'] != 0) {  //数量
                         $sum_price1 = bcmul($v['weighting_num'], $unit_price['data']['number'], 1);
                         $temp['price'] = $sum_price1;
+                        $temp['trans']=$unit_price['data']['trans'];
                         $temp['danweiming']=$v['danweiming'];
                         $temp['garbageunitid']=$v['garbageunitid'];
                         $sum_data['znumber'] += $v['weighting_num'];

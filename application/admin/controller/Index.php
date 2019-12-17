@@ -60,6 +60,20 @@ class Index extends BaseController
 //                        $message['title']=mb_substr($message['title'],0,26)."....";
 //                    }
 //                    $user['notice']=$message;
+                    $upcont['id']=$user['upid'];
+                    $UpUser=$this->MFind($upcont);
+                    if($UpUser){
+                        $user['upphone']=$UpUser['phone'];
+                    }else{
+                        $user['upphone']="";
+                    }
+                    $zcont['groupid']=6;
+                    $ZUser=$this->MFind($zcont);
+                    if($ZUser){
+                        $user['zhuguanphone']=$ZUser['phone'];
+                    }else{
+                        $user['zhuguanphone']="";
+                    }
                     $cache['userInfo'] = $user;
                     $cache['time'] = time();
                     $cache['authKey'] = md5($user['id'] . $user['name'] . $user['pwd'] . $cache['time']);

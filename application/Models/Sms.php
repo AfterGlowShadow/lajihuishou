@@ -69,4 +69,37 @@ class Sms extends BaseModel
             return false;
         }
     }
+    public function SendMessage($phone,$message)
+    {
+        $post = Request::post();
+        if (empty($post['mobile'])) {
+            $this->error = "手机号必填";
+            return false;
+        }
+        try {
+            $ssender = new SmsSingleSender($this->appid, $this->appkey);
+            $params = [];
+            $params[] = createCode(4);
+            $params[] = 5;
+            $result = $ssender->sendWithParam("86", $phone, $this->templateId,
+                $params, $this->smsSign, "", "");  // 签名参数未提供或者为空时，会使用默认签名发送短信
+//            $rsp = json_decode($result);
+
+//            if ($rsp->result == 0) {
+//                //加记录
+//                $post['code'] = $params[0];
+//                $post['create_time'] = time();
+//                $post['phone']=$phone;
+//                $res = $this->MAdd($post);
+//                return $res;
+//            } else {
+//                $this->error = $rsp->errmsg;
+//                return false;
+//            }
+        } catch (\Exception $e) {
+            echo var_dump($e);
+            $this->error = $e->getMessage();
+            return false;
+        }
+    }
 }

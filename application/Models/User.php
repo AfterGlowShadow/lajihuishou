@@ -92,6 +92,9 @@ class User extends BaseModel
             $post['upid'] = $zcdInfo['id'];
             $post['price']=0;
             $post['dprice']=0;
+            $temp=$post['longitude'];
+            $post['longitude']=$post['latitude'];
+            $post['latitude']=$temp;
             $res = $this->MAdd($post);
             if ($res) {
                 $Message_model = new Message();
@@ -159,23 +162,32 @@ class User extends BaseModel
                 $this->error = "此用户已存在";
                 return false;
             } else {
-                $upuser=session($post['token'])['userInfo'];
-                $data['token'] = md5(time());
-                $data['pwd'] = md5($post['pwd']);
-                $data['region'] = $post['county'];
-                $data['upid'] = $upuser['id'];
-                $data['name'] = $post['name'];
-                $data['realname'] = $post['realname'];
-                $data['phone'] = $post['phone'];
-                $data['zhicheng'] = $post['zhicheng'];
-                $data['groupid'] = 3;
-                $data['status'] = 2;
-                $res = $this->MAdd($data);
-                if ($res) {
-                    return $res;
-                } else {
-                    $this->error = "添加失败";
+                $mcont = [];
+                $mcont['region'] = $post['region'];
+                $mcont['del'] = 0;
+                $fadmin = $this->MFind($mcont);
+                if ($fadmin) {
+                    $this->error = "此地区已经存在暂存点,请切换地区";
                     return false;
+                } else {
+                    $upuser = session($post['token'])['userInfo'];
+                    $data['token'] = md5(time());
+                    $data['pwd'] = md5($post['pwd']);
+                    $data['region'] = $post['county'];
+                    $data['upid'] = $upuser['id'];
+                    $data['name'] = $post['name'];
+                    $data['realname'] = $post['realname'];
+                    $data['phone'] = $post['phone'];
+                    $data['zhicheng'] = $post['zhicheng'];
+                    $data['groupid'] = 3;
+                    $data['status'] = 2;
+                    $res = $this->MAdd($data);
+                    if ($res) {
+                        return $res;
+                    } else {
+                        $this->error = "添加失败";
+                        return false;
+                    }
                 }
             }
         }else{
@@ -552,6 +564,20 @@ class User extends BaseModel
 //                        $message['title']=mb_substr($message['title'],0,26)."....";
 //                    }
 //                    $admin['notice']=$message;
+                    $upcont['id']=$admin['upid'];
+                    $UpUser=$this->MFind($upcont);
+                    if($UpUser){
+                        $admin['upphone']=$UpUser['phone'];
+                    }else{
+                        $admin['upphone']="";
+                    }
+                    $zcont['groupid']=6;
+                    $ZUser=$this->MFind($zcont);
+                    if($ZUser){
+                        $admin['zhuguanphone']=$ZUser['phone'];
+                    }else{
+                        $admin['zhuguanphone']="";
+                    }
                     $cache['userInfo'] = $admin;
 //                    $cache['AuthList'] = $AuthList;
                     $cache['time'] = time();
@@ -870,8 +896,10 @@ class User extends BaseModel
         if ((array_key_exists('status', $post) && $post['status'] != "")) {
             if ($post['status'] == 1) {
                 $data['status'] = 2;
+                $msg="您的注册申请已经被审批通过,请及时登录查看.";
             } else {
                 $data['status'] = 0;
+                $msg="您的注册申请已经被驳回,请确认信息后重新申请.";
                 if(array_key_exists('remark', $post) && $post['remark'] != ""){
                     $data['reason'] = $post['remark'];
                 }
@@ -894,6 +922,9 @@ class User extends BaseModel
             }
             $res = $this->MUpdate($where, $data);
             if ($res) {
+                $user=$this->MFind($where);
+                $smsM=new Sms();
+                $smsM->SendMessage($user['phone'],$msg);
                 return $res;
             } else {
                 $this->error = "审核操作失败";

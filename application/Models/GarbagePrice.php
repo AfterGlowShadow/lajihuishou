@@ -157,6 +157,65 @@ class GarbagePrice extends  BaseModel
         $this->commit();
         return "修改成功";
     }
+    //根据用户设置的重量价格 自动添加他的其他单位价格
+//    public function AutoPrice($post,$user){
+//        $garbageunitM=new GarbageUnit();
+//        $garcont['garbageid']=$post['id'];
+//        $garbageunit=$garbageunitM->MSelect($garcont);
+//        $price=$this->TranPrice($post['id'],$user,$post);
+//        if($price){
+//            foreach ($garbageunit as  $key => $value){
+//                if($value['danweiming']!="kg"){
+//                    $where['garbageid']=$post['id'];
+//                    $where['garbageunitid']=$garbageunit['id'];
+//                    $where['start_time']=$post['start_time'];
+//                    $where['end_time']=$post['end_time'];
+//                    $data['number']=$price['number']*$value['price'];
+//                    $garbageprice=$this->MUpdate($where,$data);
+//                    if(!$garbageprice){
+//                        return false;
+//                    }
+//                }
+//            }
+//        }
+//        return true;
+//    }
+    //转换的kg单位价格
+//    public  function TranPrice($id,$user,$post){
+//        $garbageunitM=new GarbageUnit();
+//        $garbageM=new Garbage();
+//        $garbagecont['id']=$id;
+//        $garbage=$garbageM->MFind($garbagecont);
+//        $garbageunitcont['garbageid']=$id;
+//        $garbageunitcont['danweiming']='kg';
+//        $garbageunit=$garbageunitM->MFind($garbageunitcont);
+//
+//            $where['garbageid']=$id;
+//            $where['garbageunitid']=$garbageunit['id'];
+//            $where['start_time']=$post['start_time'];
+//            $where['end_time']=$post['end_time'];
+//            $garbageprice=$this->MFind($where);
+//            if($garbageprice){
+//                return $garbageprice;
+//            }else{
+//                if($garbage['pga']==0){
+//                    return false;
+//                }else{
+//                    $garbagecont['id']=$garbage['pga'];
+//                    $garbage=$garbageM->MFind($garbagecont);
+//                    $garbageunitcont['garbageid']=$garbage['id'];
+//                    $garbageunitcont['danweiming']='kg';
+//                    $garbageunit=$garbageunitM->MFind($garbageunitcont);
+//                    $where['garbageid']=$garbage['id'];
+//                    $where['garbageunitid']=$garbageunit['id'];
+//                    $where['start_time']=$post['start_time'];
+//                    $where['end_time']=$post['end_time'];
+//                    $garbageprice=$this->MFind($where);
+//                    return $garbageprice;
+//                }
+//            }
+//
+//    }
     //分页查询信息
     public function GetList()
     {

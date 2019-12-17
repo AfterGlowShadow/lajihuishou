@@ -313,14 +313,19 @@ function getGarbagePrice($ids = "",$danweiming, $Model,$orderinfo="")
                     $res = $Model->MFind($where, '');
                     if($res){
                         if ($user['userInfo']['groupid'] < 3 && $user['userInfo']['daili'] == 1) {
+                            $res['danweiming']=$danweiming;
                             $res['number'] = $res['dlnumber'];
+                            $res['bnumber']=$res['dlnumber'];
                         }else{
+                            $res['danweiming']=$danweiming;
                             $res['number'] = $res['number'];
+                            $res['bnumber']=$res['number'];
                             $res['garbageunitid'] = $garbageuinfo['id'];
                         }
                     }
                 }
                 if($res){
+                    $res['trans']=1;
                     $returnData = array('status' => 1 ,'data' => $res);
                     break;
                 }
@@ -353,15 +358,16 @@ function getGarbagePrice($ids = "",$danweiming, $Model,$orderinfo="")
                 $gwhere['danweiming']=$danweiming;
                 $gwhere['garbageid']=$ids_arr[0];
                 $endinfo=$garbageum->MFind($gwhere);
+                //查看自己重量有没有设置价格
                 $gwhere['danweiming']='kg';
-                $gwhere['garbageid']=$ids_arr[1];
-                $garbageuinfo=$garbageum->MFind($gwhere);
-                $res=array();
-                if($garbageuinfo){
+                $gwhere['garbageid']=$ids_arr[0];
+                $endinfo1=$garbageum->MFind($gwhere);
+
+                //查看自己重量有没有设置价格
                     $where = [];
-                    $where[] = ['garbageid', '=', $ids_arr[1]];
+                    $where[] = ['garbageid', '=', $ids_arr[0]];
                     $where[] = ['regionz', '=', $region];
-                    $where[]=['garbageunitid','=',$garbageuinfo['id']];
+                    $where[]=['garbageunitid','=',$endinfo1['id']];
                     if ($user['userInfo']['groupid'] < 3 && $user['userInfo']['daili'] == 1) {
                         $where[] = ['dlstarttime', 'lt', time()];
                         $where[] = ['dlendtime', 'gt', time()];
@@ -374,11 +380,44 @@ function getGarbagePrice($ids = "",$danweiming, $Model,$orderinfo="")
                         $res['garbageunitid'] = $endinfo['id'];
                         if ($user['userInfo']['groupid'] < 3 && $user['userInfo']['daili'] == 1) {
                             $res['number'] = $res['dlnumber']*$endinfo['transweight'];
+                            $res['danweiming']='kg';
+                            $res['bnumber']=$res['dlnumber'];
                         }else{
+                            $res['bnumber']=$res['number'];
+                            $res['danweiming']='kg';
                             $res['number'] = $res['number']*$endinfo['transweight'];
                         }
+                    }else{
+                        //自己没有价格找上级 看上级kg价格是否设置
+                        $gwhere['danweiming']='kg';
+                        $gwhere['garbageid']=$ids_arr[1];
+                        $garbageuinfo=$garbageum->MFind($gwhere);
+                        $where = [];
+                        $where[] = ['garbageid', '=', $ids_arr[1]];
+                        $where[] = ['regionz', '=', $region];
+                        $where[]=['garbageunitid','=',$garbageuinfo['id']];
+                        if ($user['userInfo']['groupid'] < 3 && $user['userInfo']['daili'] == 1) {
+                            $where[] = ['dlstarttime', 'lt', time()];
+                            $where[] = ['dlendtime', 'gt', time()];
+                        }else{
+                            $where[] = ['start_time', 'lt', time()];
+                            $where[] = ['end_time', 'gt', time()];
+                        }
+                        $res = $Model->MFind($where, '');
+                        if($res){
+                            $res['garbageunitid'] = $garbageuinfo['id'];
+                            if ($user['userInfo']['groupid'] < 3 && $user['userInfo']['daili'] == 1) {
+                                $res['bnumber']=$res['dlnumber'];
+                                $res['danweiming']='kg';
+                                $res['number'] = $res['dlnumber']*$endinfo['transweight'];
+                            }else{
+                                $res['bnumber']=$res['number'];
+                                $res['danweiming']='kg';
+                                $res['number'] = $res['number']*$endinfo['transweight'];
+                            }
+                        }
                     }
-                }
+
                 if(!empty($res)){
                     $res['trans']=$endinfo['transweight'];
                     $returnData = array('status' => 1 ,'data' => $res);

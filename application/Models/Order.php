@@ -295,6 +295,7 @@ class Order extends BaseModel
             $order_list = $orderCalculation['data'];
             $this->startTrans();
             if ($order) {
+
                     if ($this->ValidatenNumber($yuangarbagelist,$order_list,$order,$post)) {
                         $data['ischange']=1;
                         if ($order['type'] == 1) {
@@ -441,6 +442,8 @@ class Order extends BaseModel
     {
         $post = Request::post();
         $orderCalculation = (new OrderCalculation())->Calculation($garbagelist);
+//        print_r($orderCalculation);
+//        exit;
         if ($orderCalculation['status'] == 0) {
             $this->error = $orderCalculation['msg'];
             return false;
@@ -881,25 +884,27 @@ class Order extends BaseModel
         }
     }
 
-    public function UpJiFen($user,$old_order)
+    public function  UpJiFen($user,$old_order)
     {
-
         $userM=new User();
-        if($user['userInfo']['groupid']==1){
-            $where['id']=$old_order['uuser'];
-        }else{
-            $where['id']=$old_order['user_id'];
-        }
+//        if($user['userInfo']['groupid']==1){
+//            $where['id']=$old_order['uuser'];
+//        }else{
+//            $where['id']=$old_order['user_id'];
+//        }
+        $where['id']=$old_order['user_id'];
         $twouser=$userM->MFind($where);
         if($twouser){
             $_wh = [];
-            $_wh[] =['id','=',$user['userInfo']['id']];
+//            $_wh[] =['id','=',$user['userInfo']['id']];
+            $_wh[] =['id','=',$old_order['user_id']];
             $old_user = (new User())->MFind($_wh,'');
-            if($user['userInfo']['groupid']!=1) {
-                $_update['dprice'] = $old_user['dprice'] + $old_order['price'];
-            }else{
-                $_update['price'] = $old_user['price'] + $old_order['price'];
-            }
+//            if($user['userInfo']['groupid']!=1) {
+//                $_update['dprice'] = $old_user['dprice'] + $old_order['price'];
+//            }else{
+//                $_update['price'] = $old_user['price'] + $old_order['price'];
+//            }
+            $_update['price'] = $old_user['price'] + $old_order['price'];
             $_update['zregionnumber'] = $old_user['zregionnumber'] + $old_order['znumber'];
             $_update['zregionweight'] = $old_user['zregionweight'] + $old_order['zweight'];
             $_update['jifen'] = $old_user['jifen'] + intval($old_order['price']);
@@ -923,18 +928,18 @@ class Order extends BaseModel
             $log['type'] = $user['userInfo']['groupid'];
             $log['jfprice']=$old_order['price'];
             $res3 = (new OrderLog())->setOrderLog($log);
-            $_wh = [];
-            $_wh[] =['id','=',$twouser['id']];
-            $old_user = (new User())->MFind($_wh,'');
-            if($twouser['groupid']==1) {
-                $_update1['price'] = $old_user['price'] + $old_order['price'];
-            }else{
-                $_update1['dprice'] = $old_user['dprice'] + $old_order['price'];
-            }
-            $_update1['zregionnumber'] = $old_user['zregionnumber'] + $old_order['znumber'];
-            $_update1['zregionweight'] = $old_user['zregionweight'] + $old_order['zweight'];
-            $_update1['jifen'] = $old_user['jifen'] + intval($old_order['price']);
-            $res4 = (new User())->MUpdate($_wh,$_update1);
+//            $_wh = [];
+//            $_wh[] =['id','=',$twouser['id']];
+//            $old_user = (new User())->MFind($_wh,'');
+//            if($twouser['groupid']==1) {
+//                $_update1['price'] = $old_user['price'] + $old_order['price'];
+//            }else{
+//                $_update1['dprice'] = $old_user['dprice'] + $old_order['price'];
+//            }
+//            $_update1['zregionnumber'] = $old_user['zregionnumber'] + $old_order['znumber'];
+//            $_update1['zregionweight'] = $old_user['zregionweight'] + $old_order['zweight'];
+//            $_update1['jifen'] = $old_user['jifen'] + intval($old_order['price']);
+//            $res4 = (new User())->MUpdate($_wh,$_update1);
             //写入日志
 //            $log1['addtime'] = time();
 //            $log1['userid'] = $twouser['id'];
@@ -943,7 +948,7 @@ class Order extends BaseModel
 //            $log1['type'] = $twouser['groupid'];
 //            $log1['jfprice']=$old_order['price'];
 //            $res5 = (new OrderLog())->setOrderLog($log1);
-            if($res1&&$res2&&$res3&&$res4){
+            if($res1&&$res2&&$res3){
                 return true;
             }else{
                 return false;
@@ -1035,7 +1040,11 @@ class Order extends BaseModel
             $where['type'] = $user['userInfo']['groupid'];
             $Order = $this->MFind($where);
             if ($Order) {
-                if($user['userInfo']['groupid']==1){
+                if($Order['isbaozhi']==1){
+                    $this->error = "此订单开启了价格保护不能取消";
+                    return false;
+                }
+                else if($user['userInfo']['groupid']==1){
                     if ($Order['status'] == 1) {
                         $data['status'] = 6;
                     } else {
@@ -1054,7 +1063,6 @@ class Order extends BaseModel
                         return false;
                     }
                 }
-
                 $res = $this->MUpdate($where, $data);
                 if ($res) {
                     return $res;
