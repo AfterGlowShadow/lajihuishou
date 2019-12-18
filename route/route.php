@@ -730,6 +730,11 @@ Route::group('api', function () {
              * @menu 订单管理
              */
             Route::post("getLog", 'home/Order/GetOrderLog');
+            /**
+             * @name 批量生成订单
+             * @menu 订单管理
+             */
+            Route::post("bulkorder", 'home/Order/BulkOrderNumber');
             // 业务员、暂存点发布订单
             // Route::post('addOrder', 'home/Order/SaleAddOne');
         })->header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, authKey, sessionId')->allowCrossDomain();

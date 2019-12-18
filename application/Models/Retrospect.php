@@ -86,7 +86,7 @@ class Retrospect extends BaseModel
         $config['u_id']=$userinfo['userInfo']['id'];
         $config['page']=$post['page'];
         $config['list_rows']=$post['list_rows'];
-        $field=array("u_id","garbageid","weighting_num","weighting_method,id");
+        $field=array("u_id","garbageid","weighting_num","weighting_method,id,number,danweiming");
         $res=$this->MLimitSelect(["u_id"=>$config['u_id'],'status'=>0,'del'=>0],$config,"id desc",$field);
         if($res['data']){
             foreach ($res['data'] as $key =>$value){

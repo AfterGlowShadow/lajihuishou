@@ -359,16 +359,16 @@ class User extends BaseModel
     {
         $post = Request::post();
         (new UserChange())->goCheck($post);
-        $mcont['name'] = $post['name'];
+        $mcont['id'] = $post['id'];
         $mcont['status'] = 2;
         $mcont['del'] = 0;
         $fadmin = $this->MFind($mcont);
-        $token['token'] = $post['token'];
-        $fadmin1 = $this->MFind($token);
+//        $token['token'] = $post['token'];
+//        $fadmin1 = $this->MFind($token);
         //组合更新数据
         $data = $this->CreateData($post);
         if ($fadmin) {
-            $acont['id'] = $fadmin1['id'];
+            $acont['id'] = $fadmin['id'];
             $res = $this->MUpdate($acont, $data);
             if ($res) {
                 return $res;
@@ -377,14 +377,8 @@ class User extends BaseModel
                 return false;
             }
         } else {
-            $acont['id'] = $fadmin1;
-            $res = $this->MUpdate($acont, $data);
-            if ($res) {
-                return $res;
-            } else {
-                $this->error = "修改失败";
-                return false;
-            }
+            $this->error="此用户不存在";
+            return false;
         }
     }
 
@@ -578,6 +572,8 @@ class User extends BaseModel
                     }else{
                         $admin['zhuguanphone']="";
                     }
+                    $systemM=new SystemConfig();
+                    $admin['retrospect_model']=$systemM->getSystemConfig("retrospect_model");
                     $cache['userInfo'] = $admin;
 //                    $cache['AuthList'] = $AuthList;
                     $cache['time'] = time();

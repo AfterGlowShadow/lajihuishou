@@ -233,7 +233,8 @@ class Message extends BaseModel
     {
         $post = Request::post();
         (new LimitValidate())->goCheck($post);
-        $user = session("user");
+        (new TokenValidate())->goCheck($post);
+        $user = session($post['token']);
         $where['utype'] = $user['userInfo']['groupid'];
         $where['userid'] = $user['userInfo']['id'];
         $config['page'] = $post['page'];

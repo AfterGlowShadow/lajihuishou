@@ -80,7 +80,9 @@ class Order extends BaseModel
                     if($userlist){
                         $userarray=$this->getid($userlist);
                         $where[]=['user_id','in',$userarray];
-                        $where[]=['uuser','in',$user['userInfo']['id']];
+                        $where[]=['status','=',$post['status']];
+                        $whereor[]=['uuser','in',$userarray];
+                        $whereor[]=['status','=',$post['status']];
                     }else{
                         $where[]=['uuser','in',$user['userInfo']['id']];
 //                        BackData("200","没有数据");
@@ -172,9 +174,10 @@ class Order extends BaseModel
         }else{
             $res = $this->MLimitSelect($where, $config, "id desc", $filed);
         }
-//        print_r($res);
-//        exit;
         if ($res['data']) {
+//            print_r($res['data']);
+//            exit;
+
                 $res1 = (new OrderCalculation())->getOrderDetail($res['data']);
                 if ($res1['status'] == 0) {
                     $this->error = $res1['msg'];
@@ -647,15 +650,21 @@ class Order extends BaseModel
                 $_where = [];
                 $_where[] = ['orderid', '=', $res['id']];
                 $_where[] = ['del', '=', 0];
-                $order_detail = $orderDetailModel->MSelect($_where, 'id desc', 'id,orderid,garbageid ,weighting_num,weighting_method,danweiming,garbageunitid');
+                $order_detail = $orderDetailModel->MSelect($_where, 'id desc', 'id,orderid,garbageid ,weighting_num,weighting_method,danweiming,garbageunitid,price');
                 if ($res['isbaozhi'] == 0) {
-                    $detail_res = (new OrderCalculation())->Calculation($order_detail,$res);
-
-                    if ($detail_res['status'] == 0) {
-                        $this->error = $detail_res['msg'];
-                        return false;
+                    $userM=new User();
+                    $usercont['id']=$res['user_id'];
+                    $user=$userM->MFind($usercont);
+                    if($user['groupid']<=3){
+                        $detail_res = (new OrderCalculation())->Calculation($order_detail,$res);
+                        if ($detail_res['status'] == 0) {
+                            $this->error = $detail_res['msg'];
+                            return false;
+                        }
+                        $res['detail'] = $detail_res['data']['detail'];
+                    }else{
+                        $res['detail'] = $order_detail;
                     }
-                    $res['detail'] = $detail_res['data']['detail'];
                 } else {
                     $res['detail'] = $order_detail;
                 }
@@ -899,9 +908,10 @@ class Order extends BaseModel
 //            $_wh[] =['id','=',$user['userInfo']['id']];
             $_wh[] =['id','=',$old_order['user_id']];
             $old_user = (new User())->MFind($_wh,'');
-//            if($user['userInfo']['groupid']!=1) {
-//                $_update['dprice'] = $old_user['dprice'] + $old_order['price'];
-//            }else{
+            if($user['userInfo']['groupid']!=1) {
+                $_update['dprice'] = $old_user['dprice'] - $old_order['price'];
+            }
+//            else{
 //                $_update['price'] = $old_user['price'] + $old_order['price'];
 //            }
             $_update['price'] = $old_user['price'] + $old_order['price'];
@@ -928,18 +938,21 @@ class Order extends BaseModel
             $log['type'] = $user['userInfo']['groupid'];
             $log['jfprice']=$old_order['price'];
             $res3 = (new OrderLog())->setOrderLog($log);
-//            $_wh = [];
-//            $_wh[] =['id','=',$twouser['id']];
-//            $old_user = (new User())->MFind($_wh,'');
+            $_wh = [];
+            $where['id']=$old_order['uuser'];
+            $twouser=$userM->MFind($where);
+            $_wh[] =['id','=',$twouser['id']];
+            $old_user = (new User())->MFind($_wh,'');
 //            if($twouser['groupid']==1) {
-//                $_update1['price'] = $old_user['price'] + $old_order['price'];
-//            }else{
-//                $_update1['dprice'] = $old_user['dprice'] + $old_order['price'];
+                $_update1['dprice'] = $old_user['dprice'] + $old_order['price'];
+//            }
+//            else{
+//                $_update1['dprice'] = $old_user['dprice'] - $old_order['price'];
 //            }
 //            $_update1['zregionnumber'] = $old_user['zregionnumber'] + $old_order['znumber'];
 //            $_update1['zregionweight'] = $old_user['zregionweight'] + $old_order['zweight'];
 //            $_update1['jifen'] = $old_user['jifen'] + intval($old_order['price']);
-//            $res4 = (new User())->MUpdate($_wh,$_update1);
+            $res4 = (new User())->MUpdate($_wh,$_update1);
             //写入日志
 //            $log1['addtime'] = time();
 //            $log1['userid'] = $twouser['id'];
@@ -948,7 +961,7 @@ class Order extends BaseModel
 //            $log1['type'] = $twouser['groupid'];
 //            $log1['jfprice']=$old_order['price'];
 //            $res5 = (new OrderLog())->setOrderLog($log1);
-            if($res1&&$res2&&$res3){
+            if($res1&&$res2&&$res3&&$res4){
                 return true;
             }else{
                 return false;
@@ -1237,7 +1250,8 @@ class Order extends BaseModel
                     $ctraydata['znumber']=$trwhere['znumber']+$weight;
                     $ctraydata['cnumber']=$trwhere['cnumber']+$weight;
                     $res2=$traym->MUpdate($trwhere,$ctraydata);
-                    if($res&&$res2){
+                    $res3=$this->UpJiFen($user,$orderinfo);
+                    if($res&&$res2&&$res3){
                         $this->commit();
                         return $res;
                     }else{
@@ -1332,25 +1346,31 @@ class Order extends BaseModel
      */
     public function BulkOrderNumber()
     {
-        $post['number']=Request::post();
-        if(array_key_exists("number",$post)&&is_numeric($post['number'])){
-            $time=$post['number'];
-            $data=array();
-            while($time){
-                $temp=array();
-                $temp['ordernumber']=BulkOrderSn();
-                array_push($data,$temp);
-                $time--;
-            }
-            $res=$this->MBulkAdd($data);
-            if($res){
-                return $res;
+        $post=Request::post();
+        (new TokenValidate())->goCheck($post);
+        if($post['groupid']==4&&$post['groupid']==7){
+            if(array_key_exists("number",$post)&&is_numeric($post['number'])){
+                $time=$post['number'];
+                $data=array();
+                while($time){
+                    $temp=array();
+                    $temp['ordernumber']=BulkOrderSn();
+                    array_push($data,$temp);
+                    $time--;
+                }
+                $res=$this->MBulkAdd($data);
+                if($res){
+                    return $res;
+                }else{
+                    $this->error="添加失败";
+                    return false;
+                }
             }else{
-                $this->error="添加失败";
+                $this->error="参数错误";
                 return false;
             }
         }else{
-            $this->error="参数错误";
+            $this->error="权限不足";
             return false;
         }
     }

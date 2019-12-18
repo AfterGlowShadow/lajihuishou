@@ -99,5 +99,13 @@ class Order extends BaseController
         $res=$this->Model->ChangeOne();
         Back($res,"修改成功",$this->Model->getError());
     }
+    /**
+     * 批量生成订单
+     */
+    public function BulkOrderNumber()
+    {
+        $res=$this->Model->BulkOrderNumber();
+        Back($res,"修改成功",$this->Model->getError());
+    }
 
 }

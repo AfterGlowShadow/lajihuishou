@@ -704,7 +704,7 @@ class Tray extends BaseModel
         }
         return true;
     }
-    //主管出库操作
+    //主管出库操作    
 //    public function zhuOutOrder($post){
 //        $user=session($post['token']);
 //        $data['is_shangjiao'] = 1;

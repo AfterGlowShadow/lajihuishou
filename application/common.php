@@ -417,7 +417,6 @@ function getGarbagePrice($ids = "",$danweiming, $Model,$orderinfo="")
                             }
                         }
                     }
-
                 if(!empty($res)){
                     $res['trans']=$endinfo['transweight'];
                     $returnData = array('status' => 1 ,'data' => $res);

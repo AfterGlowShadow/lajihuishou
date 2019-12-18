@@ -74,6 +74,8 @@ class Index extends BaseController
                     }else{
                         $user['zhuguanphone']="";
                     }
+                    $systemM=new SystemConfig();
+                    $user['retrospect_model']=$systemM->getSystemConfig("retrospect_model");
                     $cache['userInfo'] = $user;
                     $cache['time'] = time();
                     $cache['authKey'] = md5($user['id'] . $user['name'] . $user['pwd'] . $cache['time']);

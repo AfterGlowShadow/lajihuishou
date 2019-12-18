@@ -70,7 +70,6 @@ class OrderCalculation extends BaseModel
         foreach ($garbagelist as $k => $v) {
             //根据数量计算价格
             $unit_price = getGarbagePrice($v['garbageid'],$v['danweiming'], new GarbagePrice(),$orderinfo);
-//            print_r($unit_price);
             if(isset($v['id'])){
                 $garbageOrderList[$k]['id'] = $v['id'] ? $v['id'] : '';
             }else{
@@ -151,15 +150,19 @@ class OrderCalculation extends BaseModel
             }
             //主管特有结束
             $order_detail = $orderDetailModel->MSelect($_where, 'id desc');
-//            print_r($_where);
-//            print_r($order_detail);
-//            exit;
             if ($v['isbaozhi'] == 0) {
-                $detail_res = $this->Calculation($order_detail,$v);
-                if ($detail_res['status'] == 0) {
-                    return $detail_res;
+                $userM=new User();
+                $usercont['id']=$v['user_id'];
+                $user=$userM->MFind($usercont);
+                if($user['groupid']>3){
+                    $orderlist[$k]['detail'] = $order_detail;
+                }else{
+                    $detail_res = $this->Calculation($order_detail,$v);
+                    if ($detail_res['status'] == 0) {
+                        return $detail_res;
+                    }
+                    $orderlist[$k]['detail'] = $detail_res['data']['detail'];
                 }
-                $orderlist[$k]['detail'] = $detail_res['data']['detail'];
             } else {
                 $orderlist[$k]['detail'] = $order_detail;
             }
