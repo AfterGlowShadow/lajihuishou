@@ -281,6 +281,7 @@ class Tray extends BaseModel
                     $parbagenumber=array();
                     $parbagenumber['weighting_num']=0;
                     foreach ($gplist as $key => $value){
+
                         if(!strstr($value['garbageid'],$post['id'])){
                             continue;
                         }
@@ -384,7 +385,7 @@ class Tray extends BaseModel
                 $garbage=new Garbage();
                 $post['id']=explode(",",$post['id']);
                 $post['id']=$post['id'][0];
-                $gwhere1['id']=$post['id'];
+                $gwhere1['id']=$post['id'][0];
                 $garbageinfo1=$garbage->MFind($gwhere1);
                 $res[$key]['garbage']=$garbageinfo1;
                 $temporder=array();
@@ -404,19 +405,17 @@ class Tray extends BaseModel
                         $temp=array();
                         $parbagenumber=array();
                         $parbagenumber['weighting_num']=0;
+                        $temp1=array();
                         foreach ($gplist as $k => $v){
-                            $temp1=array();
                             $gwhere['id']=explode(",",$v['garbageid']);
                             $gwhere1['id']=$gwhere['id'][0];
                             $garbageinfo=$garbage->MFind($gwhere1);
-                            $garbageinfo=$garbage->MFind($gwhere1);
                             $gwhere['id']=$gwhere['id'][(count($gwhere['id'])-2)];
-                            if($gwhere['id']==$post['id']){
-
+                            $v['garbageid']=explode(",",$v['garbageid']);
+                            if($gwhere1['id']==$post['id']){
                                 $gwhere['del']=0;
                                 $garbageinfo=$garbage->MFind($gwhere);
-                                $garbageinfo=$garbage->MFind($gwhere);
-                                if(array_key_exists($gwhere['id'],$garbagelist)){
+                                if(array_key_exists($gwhere['id'],$v['garbageid'])){
                                     $temp1['id']=$garbageinfo['id'];
                                     $temp1['goid']=$v['id'];
                                     array_push( $temporder['goid'],$v['id']);
@@ -505,19 +504,21 @@ class Tray extends BaseModel
                 $sum_weight = 0;
                 $sum_number = 0;
                 foreach ($gres as $key => $value) {
-                    $unit_price = getGarbagePrice($value['garbageid'],$value['danweiming'], new GarbagePrice());
-                    if ($unit_price['status'] == 0) {
-                        $returnData['msg'] = '获取报价失败';
-                        $sum_price1 = 0;
-                        $returnData['status'] = 0;
-                        $returnData['price'] = $sum_price1;
-                        BackData("400","获取报价失败");
-                    } else {
-                        if ($value['weighting_num'] != ""&&$value['weighting_num'] != 0) {  //重量
-                            $sum_price1 += bcmul($value['weighting_num'], $unit_price['data']['number'], 1);
-                            $sum_number += (int)$value['weighting_num'];
-                        }
-                    }
+                    //获取总订单重量
+                    $sum_number+=$value['weighting_num'];
+//                    $unit_price = getGarbagePrice($value['garbageid'],$value['danweiming'], new GarbagePrice());
+//                    if ($unit_price['status'] == 0) {
+//                        $returnData['msg'] = '获取报价失败';
+//                        $sum_price1 = 0;
+//                        $returnData['status'] = 0;
+//                        $returnData['price'] = $sum_price1;
+//                        BackData("400","获取报价失败");
+//                    } else {
+//                        if ($value['weighting_num'] != ""&&$value['weighting_num'] != 0) {  //重量
+//                            $sum_price1 += bcmul($value['weighting_num'], $unit_price['data']['number'], 1);
+//                            $sum_number += (int)$value['weighting_num'];
+//                        }
+//                    }
                 }
                 //生成id
                 $data1['isbaozhi'] = 0;
@@ -526,11 +527,14 @@ class Tray extends BaseModel
                 $data1['type'] = 6;
                 $data1['status'] = 3;
                 $data1['create_time'] = time();
-                $data1['ordernumber'] = createOrderSn();
+//                $data1['ordernumber'] = createOrderSn();
                 $orderm = new Order();
                 $ocont['id']=$post['id'];
                 $res = $orderm->MUpdate($ocont,$data1);
-                if ($res) {
+                $ocont1['orderid']=$post['id'];
+                $garbagedata['weighting_num']=$sum_number;
+                $res1 = $garbageoM->MUpdate($ocont1,$garbagedata);
+                if ($res&&$res1) {
                     $cgarbageo['outorderid'] = $post['id'];
                     $res2 = $garbageoM->MUpdate($where, $cgarbageo);
                     $gres1 = $garbageoM->MUpdate($where, $data);

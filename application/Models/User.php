@@ -295,10 +295,21 @@ class User extends BaseModel
     //组合更新数据(管理层可修改)
     public function CreateData($post)
     {
-        $data['name'] = $post['name'];
-        $data['phone'] = $post['phone'];
-        $data['realname'] = $post['realname'];
-        $data['zhicheng'] = $post['zhicheng'];
+        if (array_key_exists("name", $post) && $post['name'] != ""){
+            $data['name'] = $post['name'];
+        }
+        if (array_key_exists("phone", $post) && $post['phone'] != ""){
+            $data['phone'] = $post['phone'];
+        }
+        if (array_key_exists("realname", $post) && $post['realname'] != ""){
+            $data['realname'] = $post['realname'];
+        }
+        if (array_key_exists("zhicheng", $post) && $post['zhicheng'] != "") {
+            $data['zhicheng'] = $post['zhicheng'];
+        }
+        if (array_key_exists("pwd", $post) && $post['pwd'] != "") {
+            $data['pwd'] = md5($post['pwd']);
+        }
         if(array_key_exists("city",$post)&&$post['city']!="") {
             $data['province'] = $post['province'];
         }
@@ -358,26 +369,31 @@ class User extends BaseModel
     public function ChangeOne()
     {
         $post = Request::post();
-        (new UserChange())->goCheck($post);
-        $mcont['id'] = $post['id'];
-        $mcont['status'] = 2;
-        $mcont['del'] = 0;
-        $fadmin = $this->MFind($mcont);
+        if(array_key_exists("id",$post)){
+//        (new UserChange())->goCheck($post);
+            $mcont['id'] = $post['id'];
+            $mcont['status'] = 2;
+            $mcont['del'] = 0;
+            $fadmin = $this->MFind($mcont);
 //        $token['token'] = $post['token'];
 //        $fadmin1 = $this->MFind($token);
-        //组合更新数据
-        $data = $this->CreateData($post);
-        if ($fadmin) {
-            $acont['id'] = $fadmin['id'];
-            $res = $this->MUpdate($acont, $data);
-            if ($res) {
-                return $res;
+            //组合更新数据
+            $data = $this->CreateData($post);
+            if ($fadmin) {
+                $acont['id'] = $fadmin['id'];
+                $res = $this->MUpdate($acont, $data);
+                if ($res) {
+                    return $res;
+                } else {
+                    $this->error = "修改失败";
+                    return false;
+                }
             } else {
-                $this->error = "修改失败";
+                $this->error="此用户不存在";
                 return false;
             }
-        } else {
-            $this->error="此用户不存在";
+        }else{
+            $this->error="缺少必要数据";
             return false;
         }
     }
@@ -447,28 +463,39 @@ class User extends BaseModel
         if(array_key_exists("token",$post)&&$post['token']!=""){
             $user=session($post['token']);
             if($user['userInfo']['groupid']==3){
-                $where['groupid']=1;
                 $where['upid']=$user['userInfo']['id'];
+                $where['groupid']=2;
+                $ressalea = $this->MSelect($where);
+                $where=[];
+                $where[]=array("groupid","=",1);
+                $where[]=array("upid","=",$user['userInfo']['id']);
+                if($ressalea){
+                    $temp=array();
+                    foreach ($ressalea as $key => $value){
+                        array_push($temp,$value['id']);
+                    }
+                    $whereor[]=array("upid","in",$temp);
+                }
             }
             if($user['userInfo']['groupid']==2){
-                $where['groupid']=1;
-                $where['upid']=$user['userInfo']['id'];
+                $where[]=array("groupid","=",1);
+                $where[]=array("upid","=",$user['userInfo']['id']);
             }
         }
         $config['page'] = $post['page'];
         $config['list_rows'] = $post['list_rows'];
         $field = array("token", "name", "phone", 'id', 'realname', 'pic', 'zhicheng', 'groupid', 'jifen', 'price', 'txprice','address');
         if(array_key_exists("status",$post)&&$post['status']!="") {
-            $where['status'] = $post['status'];
+            $where[] = array("status","=",$post['status']);
+            $whereor[]=array("status","=",$post['status']);
         }
-        $where['del'] = 0;
+        $where[] = array("del","=",0);
         if (array_key_exists("groupid", $post) && $post['groupid'] != "") {
             $where['groupid'] = $post['groupid'];
         }
         if (array_key_exists("daili", $post) && $post['daili'] != "") {
             $where['daili'] = $post['daili'];
         }
-
         if(array_key_exists("timesearch", $post) && $post['timesearch'] != ""&&array_key_exists("starttime", $post) && $post['starttime'] != ""&&array_key_exists("endtime", $post) && $post['endtime'] != ""){
             if($post['starttime']<$post['endtime']){
                 $res = $this->MBetweenTimeS($where,$post['timesearch'],$post['starttime'],$post['endtime'],$config);
@@ -477,7 +504,11 @@ class User extends BaseModel
                 return false;
             }
         }else{
-            $res = $this->MLimitSelect($where, $config, "id desc", $field);
+            if($whereor){
+                $res = $this->MLimitSelect($where, $config, "id desc","",$whereor);
+            }else{
+                $res = $this->MLimitSelect($where, $config, "id desc");
+            }
         }
         if ($res) {
             $GroupM = new Group();

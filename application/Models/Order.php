@@ -444,12 +444,28 @@ class Order extends BaseModel
     private function shopOrder($garbagelist, $user)
     {
         $post = Request::post();
-        $orderCalculation = (new OrderCalculation())->Calculation($garbagelist);
+        if($user['userInfo']['groupid']!=6){
+            $orderCalculation = (new OrderCalculation())->Calculation($garbagelist);
 //        print_r($orderCalculation);
 //        exit;
-        if ($orderCalculation['status'] == 0) {
-            $this->error = $orderCalculation['msg'];
-            return false;
+            if ($orderCalculation['status'] == 0) {
+                $this->error = $orderCalculation['msg'];
+                return false;
+            }
+        }else{
+            $orderCalculation['data']['detail']=array();
+            $orderCalculation['data']['znumber']=0;
+            foreach ($garbagelist as $key => $value){
+                if(array_key_exists($value['garbageid'], $orderCalculation['data']['detail'])){
+                    $orderCalculation['data']['znumber']+=$value['weighting_num'];
+                    $orderCalculation['data']['detail'][$value['garbageid']]['weighting_num']+=$value['weighting_num'];
+                }else{
+                    unset($value['id']);
+                    $orderCalculation['data']['znumber']+=$value['weighting_num'];
+                    $orderCalculation['data']['detail'][$value['garbageid']]=$value;
+                }
+            }
+            $orderCalculation['data']['price']=0;
         }
         $GarbageOrderModel = new GarbageOrder();
         $data['status'] = 1;
