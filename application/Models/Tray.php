@@ -384,8 +384,8 @@ class Tray extends BaseModel
                 $orderlist1=array();
                 $garbage=new Garbage();
                 $post['id']=explode(",",$post['id']);
-                $post['id']=$post['id'][0];
                 $gwhere1['id']=$post['id'][0];
+                $post['id']=$post['id'][0];
                 $garbageinfo1=$garbage->MFind($gwhere1);
                 $res[$key]['garbage']=$garbageinfo1;
                 $temporder=array();
@@ -412,7 +412,7 @@ class Tray extends BaseModel
                             $garbageinfo=$garbage->MFind($gwhere1);
                             $gwhere['id']=$gwhere['id'][(count($gwhere['id'])-2)];
                             $v['garbageid']=explode(",",$v['garbageid']);
-                            if($gwhere1['id']==$post['id']){
+                            if($gwhere['id']==$post['id']){
                                 $gwhere['del']=0;
                                 $garbageinfo=$garbage->MFind($gwhere);
                                 if(array_key_exists($gwhere['id'],$v['garbageid'])){

@@ -246,6 +246,7 @@ class Garbage extends BaseModel
             $user=session($post['token']);
             $post['regionz']=$user['userInfo']['region'];
         }
+
 //        if(array_key_exists("status",$post)&&$post['status']==1){
             $res['data']=$this->GetPrice($res['data'],$post);
 //        }else{

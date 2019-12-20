@@ -81,8 +81,8 @@ class Order extends BaseModel
                         $userarray=$this->getid($userlist);
                         $where[]=['user_id','in',$userarray];
                         $where[]=['status','=',$post['status']];
-                        $whereor[]=['uuser','in',$userarray];
-                        $whereor[]=['status','=',$post['status']];
+//                        $whereor[]=['uuser','in',$userarray];
+//                        $whereor[]=['status','=',$post['status']];
                     }else{
                         $where[]=['uuser','in',$user['userInfo']['id']];
 //                        BackData("200","没有数据");
@@ -115,7 +115,12 @@ class Order extends BaseModel
                 $where[] = ['status', '=', 5];
             } else {  //自己的
                 $where[] = ['user_id', '=', $user['userInfo']['id']];
-                $where[] = ['status', '=', $post['status']];
+                if($post['status']==1){
+                    //2为待库管入库 1为待主管确认 7待会计确认
+                    $where[] = ['status', 'in', array(2,1,7)];
+                }else{
+                    $where[] = ['status', '=', $post['status']];
+                }
             }
         }elseif ($user['userInfo']['groupid'] == 5) { //库管
             $where[] = ['status', '=', $post['status']];
@@ -128,7 +133,10 @@ class Order extends BaseModel
 //                    $userlist=$userM->MSelect($fuwhere);
 //                    $userarray=$this->getid($userlist);
 //                    $where[]=['user_id','in',$userarray];
-                    $where[]=['type','=',"3"];
+                    //能入库会计或者暂存点的订单
+                    $where[]=['type','=',3];
+                    $whereor[]=['type','=',6];
+                    $whereor[]=['status','=',1];
                 }
             }else{
                 if(array_key_exists("otype",$post)&&$post['otype']==1){
