@@ -62,6 +62,7 @@ class Order extends BaseModel
                 $where[]=['isshangjiao','=',$post['is_shangjiao']];
                 $where[]=['uuser','=',$user['userInfo']['id']];
                 $where[] = ['status', '=',5];
+                $where[]=['type','=',1];
             }else{ //自己的
                 $where[] = ['user_id', '=', $user['userInfo']['id']];
                 $where[] = ['status', '=', $post['status']];
@@ -434,13 +435,13 @@ class Order extends BaseModel
                         if (!$res1) {
                             return false;
                         }
-                        return true;
                     }
                 }
             } else {
                 return false;
             }
         }
+        return true;
     }
 
     /**

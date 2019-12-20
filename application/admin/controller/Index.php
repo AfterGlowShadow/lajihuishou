@@ -61,14 +61,14 @@ class Index extends BaseController
 //                    }
 //                    $user['notice']=$message;
                     $upcont['id']=$user['upid'];
-                    $UpUser=$this->MFind($upcont);
+                    $UpUser=$userm->MFind($upcont);
                     if($UpUser){
                         $user['upphone']=$UpUser['phone'];
                     }else{
                         $user['upphone']="";
                     }
                     $zcont['groupid']=6;
-                    $ZUser=$this->MFind($zcont);
+                    $ZUser=$userm->MFind($zcont);
                     if($ZUser){
                         $user['zhuguanphone']=$ZUser['phone'];
                     }else{
