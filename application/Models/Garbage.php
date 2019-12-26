@@ -287,9 +287,64 @@ class Garbage extends BaseModel
             return false;
         }
     }
+    public function IsDaili($post){
+        $user=session($post['token']);
+        $user=$user['userInfo'];
+        $userM=new User();
+        if($user['groupid']==3&&$user['daili']==1){
+            return true;
+        }else if($user['groupid']==2){
+            $where['id']=$user['upid'];
+            $user=$userM->MFind($where);
+            if($user){
+                if($user['groupid']==3&&$user['daili']==1) {
+                    return true;
+                }else{
+                    return false;
+                }
+            }else{
+                return false;
+            }
+        }else if($user['groupid']==1){
+            $where['id']=$user['upid'];
+            $user=$userM->MFind($where);
+            if($user) {
+                if ($user['groupid'] == 3 && $user['daili'] == 1) {
+                    return true;
+                } else {
+                    if($user['groupid'] == 2){
+                        $where['id']=$user['upid'];
+                        $user=$userM->MFind($where);
+                        if($user){
+                            if($user['groupid']==3&&$user['daili']==1) {
+                                return true;
+                            }else{
+                                return false;
+                            }
+                        }else{
+                            return false;
+                        }
+                    }else{
+                        return false;
+                    }
+                }
+            }else{
+                return false;
+            }
+        }else{
+            return false;
+        }
+    }
     //根据垃圾查询垃圾当前时间的价格
     public function GetPrice($data,$post)
     {
+        $daili=false;
+        if(array_key_exists('daili',$post)&&$post['daili']==1){
+            $daili=true;
+        }else if(array_key_exists('token',$post)){
+            $user=session($post['token']);
+            $daili=$this->IsDaili($post);
+        }
         $regionG=new RegionGroup();
         $GarbagePrice=new GarbagePrice();
         $garbageunitM=new GarbageUnit();
@@ -309,13 +364,44 @@ class Garbage extends BaseModel
                             }
                         }
                     }
-                    if(array_key_exists("start_time",$post)&&$post['start_time']!=""&&array_key_exists("end_time",$post)&&$post['end_time']!=""){
-                        //带时间的查询
-//                    $price=$GarbagePrice->MBetweenTimeS($where,"");
-                        $price = Db::query("select * from lj_garbageprice where garbageunitid=".$v['id']." and regionz=".$post['regionz']." and status=1 and del=0 and ((start_time<=".strtotime($post['start_time'])." and ".strtotime($post['start_time'])."<=end_time)  or (start_time<=".strtotime($post['end_time'])." and ".strtotime($post['end_time'])."<=end_time))  order by id desc  limit ".$post['page'].",".$post['list_rows']);
+                    if(array_key_exists("token",$post)){
+                        if($daili){
+                            if(array_key_exists("start_time",$post)&&$post['start_time']!=""&&array_key_exists("end_time",$post)&&$post['end_time']!=""){
+                                //带时间的查询
+                                $price = Db::query("select * from lj_garbageprice where garbageunitid=".$v['id']." and regionz=".$post['regionz']." and status=1 and del=0 and ((dlstarttime<=".strtotime($post['start_time'])." and ".strtotime($post['start_time'])."<=dlendtime)  or (dlstarttime<=".strtotime($post['end_time'])." and ".strtotime($post['end_time'])."<=dlendtime))  order by id desc  limit ".$post['page'].",".$post['list_rows']);
+                            }else{
+                                $where['garbageunitid']=$v['id'];
+                                $price=$GarbagePrice->MFHTimeT($where,"");
+                            }
+                            if(!$price){
+                                if(array_key_exists("start_time",$post)&&$post['start_time']!=""&&array_key_exists("end_time",$post)&&$post['end_time']!=""){
+                                    //带时间的查询
+                                    $price = Db::query("select * from lj_garbageprice where garbageunitid=".$v['id']." and regionz=".$post['regionz']." and status=1 and del=0 and ((start_time<=".strtotime($post['start_time'])." and ".strtotime($post['start_time'])."<=end_time)  or (start_time<=".strtotime($post['end_time'])." and ".strtotime($post['end_time'])."<=end_time))  order by id desc  limit ".$post['page'].",".$post['list_rows']);
+                                }else{
+                                    $where['garbageunitid']=$v['id'];
+                                    $price=$GarbagePrice->MFHTime($where,"");
+                                }
+                                if($price){
+                                    $price[0]['dlnumber']=$price[0]['number'];
+                                }
+                            }
+                        }else{
+                            if(array_key_exists("start_time",$post)&&$post['start_time']!=""&&array_key_exists("end_time",$post)&&$post['end_time']!=""){
+                                //带时间的查询
+                                $price = Db::query("select * from lj_garbageprice where garbageunitid=".$v['id']." and regionz=".$post['regionz']." and status=1 and del=0 and ((start_time<=".strtotime($post['start_time'])." and ".strtotime($post['start_time'])."<=end_time)  or (start_time<=".strtotime($post['end_time'])." and ".strtotime($post['end_time'])."<=end_time))  order by id desc  limit ".$post['page'].",".$post['list_rows']);
+                            }else{
+                                $where['garbageunitid']=$v['id'];
+                                $price=$GarbagePrice->MFHTime($where,"");
+                            }
+                        }
                     }else{
-                        $where['garbageunitid']=$v['id'];
-                        $price=$GarbagePrice->MFHTime($where,"");
+                        if(array_key_exists("start_time",$post)&&$post['start_time']!=""&&array_key_exists("end_time",$post)&&$post['end_time']!=""){
+                            //带时间的查询
+                            $price = Db::query("select * from lj_garbageprice where garbageunitid=".$v['id']." and regionz=".$post['regionz']." and status=1 and del=0 and ((start_time<=".strtotime($post['start_time'])." and ".strtotime($post['start_time'])."<=end_time)  or (start_time<=".strtotime($post['end_time'])." and ".strtotime($post['end_time'])."<=end_time))  order by id desc  limit ".$post['page'].",".$post['list_rows']);
+                        }else{
+                            $where['garbageunitid']=$v['id'];
+                            $price=$GarbagePrice->MFHTime($where,"");
+                        }
                     }
                 }else{
                     $config['page']=$post['page'];
@@ -341,7 +427,11 @@ class Garbage extends BaseModel
                         }
                     }
 //                $price[0]['region']=$regionz;
-                    $data[$key]['danwei'][$k]['price']=$price[0]['number'];
+                    if($daili) {
+                        $data[$key]['danwei'][$k]['price'] = $price[0]['dlnumber'];
+                    }else{
+                        $data[$key]['danwei'][$k]['price'] = $price[0]['number'];
+                    }
 //                    $data[$key]['weight']=$price[0]['price'];
 //                    $data[$key]['number']=$price[0]['number'];
                     $data[$key]['danwei'][$k]['garbageunitid']=$price[0]['id'];
@@ -358,9 +448,24 @@ class Garbage extends BaseModel
                             $where['garbageunitid']=$garbageunitinfo['id'];
                             $where['garbageid']=$value['pga'];
 //                            $price=$GarbagePrice->MLimitSelect($where,$config,"id desc");
-                            $price=$GarbagePrice->MFHTime($where,"");
+                            if($daili) {
+                                $price = $GarbagePrice->MFHTimeT($where, "");
+                                if(!$price){
+                                    $price = $GarbagePrice->MFHTime($where, "");
+                                    if($price){
+                                        $price[0]['dlnumber']=$price[0]['number'];
+                                    }
+                                }
+                            }else{
+                                $price = $GarbagePrice->MFHTime($where, "");
+                            }
                             if($price){
-                                $data[$key]['danwei'][$k]['price']=$price[0]['number'];
+                                if($daili) {
+                                    $data[$key]['danwei'][$k]['price'] = $price[0]['dlnumber'];
+                                }else{
+                                    $data[$key]['danwei'][$k]['price'] = $price[0]['number'];
+                                }
+//                                $data[$key]['danwei'][$k]['price']=$price[0]['number'];
                             }else{
                                 $data[$key]['danwei'][$k]['price']=0;
                             }
@@ -379,9 +484,24 @@ class Garbage extends BaseModel
                                 $where['garbageunitid']=$garbageunitinfo['id'];
                                 $where['garbageid']=$value['pga'];
 //                                $price=$GarbagePrice->MLimitSelect($where,$config,"id desc");
-                                $price=$GarbagePrice->MFHTime($where,"");
+                                if($daili) {
+                                    $price = $GarbagePrice->MFHTimeT($where, "");
+                                    if(!$price){
+                                        $price = $GarbagePrice->MFHTime($where, "");
+                                        if($price){
+                                            $price[0]['dlnumber']=$price[0]['number'];
+                                        }
+                                    }
+                                }else{
+                                    $price = $GarbagePrice->MFHTime($where, "");
+                                }
                                 if($price){
-                                    $data[$key]['danwei'][$k]['price']=$price[0]['number']*$v['transweight'];
+                                    if($daili) {
+                                        $data[$key]['danwei'][$k]['price']=$price[0]['dlnumber']*$v['transweight'];
+                                    }else{
+                                        $data[$key]['danwei'][$k]['price']=$price[0]['number']*$v['transweight'];
+                                    }
+//                                    $data[$key]['danwei'][$k]['price']=$price[0]['number']*$v['transweight'];
                                 }else{
                                     $data[$key]['danwei'][$k]['price']=0;
                                 }

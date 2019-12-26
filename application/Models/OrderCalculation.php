@@ -111,6 +111,7 @@ class OrderCalculation extends BaseModel
         $returnData['data']['price'] = $sum_price;
         $returnData['data']['detail'] = $garbageOrderList;
         $returnData['status'] = 1;
+
         return $returnData;
     }
 

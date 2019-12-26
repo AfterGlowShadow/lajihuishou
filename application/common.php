@@ -263,7 +263,100 @@ function GetArray($name = "redisarray")
     $array = $redis->get($name);
     return json_decode($array, JSON_UNESCAPED_UNICODE);
 }
-
+function IsDaili($post){
+    $user=session($post['token']);
+    $user=$user['userInfo'];
+    $userM=new User();
+    if($user['groupid']==3&&$user['daili']==1){
+        return true;
+    }else if($user['groupid']==2){
+        $where['id']=$user['upid'];
+        $user=$userM->MFind($where);
+        if($user){
+            if($user['groupid']==3&&$user['daili']==1) {
+                return true;
+            }else{
+                return false;
+            }
+        }else{
+            return false;
+        }
+    }else if($user['groupid']==1){
+        $where['id']=$user['upid'];
+        $user=$userM->MFind($where);
+        if($user) {
+            if ($user['groupid'] == 3 && $user['daili'] == 1) {
+                return true;
+            } else {
+                if($user['groupid'] == 2){
+                    $where['id']=$user['upid'];
+                    $user=$userM->MFind($where);
+                    if($user){
+                        if($user['groupid']==3&&$user['daili']==1) {
+                            return true;
+                        }else{
+                            return false;
+                        }
+                    }else{
+                        return false;
+                    }
+                }else{
+                    return false;
+                }
+            }
+        }else{
+            return false;
+        }
+    }else{
+        return false;
+    }
+}
+function IsDailiU($user){
+    $userM=new User();
+    if($user['groupid']==3&&$user['daili']==1){
+        return true;
+    }else if($user['groupid']==2){
+        $where['id']=$user['upid'];
+        $user=$userM->MFind($where);
+        if($user){
+            if($user['groupid']==3&&$user['daili']==1) {
+                return true;
+            }else{
+                return false;
+            }
+        }else{
+            return false;
+        }
+    }else if($user['groupid']==1){
+        $where['id']=$user['upid'];
+        $user=$userM->MFind($where);
+        if($user) {
+            if ($user['groupid'] == 3 && $user['daili'] == 1) {
+                return true;
+            } else {
+                if($user['groupid'] == 2){
+                    $where['id']=$user['upid'];
+                    $user=$userM->MFind($where);
+                    if($user){
+                        if($user['groupid']==3&&$user['daili']==1) {
+                            return true;
+                        }else{
+                            return false;
+                        }
+                    }else{
+                        return false;
+                    }
+                }else{
+                    return false;
+                }
+            }
+        }else{
+            return false;
+        }
+    }else{
+        return false;
+    }
+}
 /**
  * 获取报价
  * @param String $ids 垃圾分类  1,2,3,4
@@ -272,6 +365,7 @@ function GetArray($name = "redisarray")
 function getGarbagePrice($ids = "",$danweiming, $Model,$orderinfo="")
 {
     $post = Request::post();
+    $daili=IsDaili($post);
     $return = array('status' => 0, 'data' => array());
     if (empty($ids)) {
         return $return;
@@ -284,6 +378,7 @@ function getGarbagePrice($ids = "",$danweiming, $Model,$orderinfo="")
         $userM=new User();
         $user1=$userM->MFind($ucont);
         $region = $user1['region'];
+        $daili=IsDailiU($user1);
     }else{
         $region = session($post['token'])['userInfo']['region'];
     }
@@ -303,7 +398,7 @@ function getGarbagePrice($ids = "",$danweiming, $Model,$orderinfo="")
                     $where[] = ['garbageid', '=', $ids_arr[$key]];
                     $where[] = ['regionz', '=', $region];
                     $where[]=['garbageunitid','=',$garbageuinfo['id']];
-                    if ($user['userInfo']['groupid'] < 3 && $user['userInfo']['daili'] == 1) {
+                    if ($daili) {
                         $where[] = ['dlstarttime', 'lt', time()];
                         $where[] = ['dlendtime', 'gt', time()];
                     }else{
@@ -312,11 +407,25 @@ function getGarbagePrice($ids = "",$danweiming, $Model,$orderinfo="")
                     }
                     $res = $Model->MFind($where, '');
                     if($res){
-                        if ($user['userInfo']['groupid'] < 3 && $user['userInfo']['daili'] == 1) {
+                        if ($daili) {
                             $res['danweiming']=$danweiming;
                             $res['number'] = $res['dlnumber'];
                             $res['bnumber']=$res['dlnumber'];
                         }else{
+                            $res['danweiming']=$danweiming;
+                            $res['number'] = $res['number'];
+                            $res['bnumber']=$res['number'];
+                            $res['garbageunitid'] = $garbageuinfo['id'];
+                        }
+                    }else if($daili){
+                        $where = [];
+                        $where[] = ['garbageid', '=', $ids_arr[$key]];
+                        $where[] = ['regionz', '=', $region];
+                        $where[]=['garbageunitid','=',$garbageuinfo['id']];
+                        $where[] = ['start_time', 'lt', time()];
+                        $where[] = ['end_time', 'gt', time()];
+                        $res = $Model->MFind($where, '');
+                        if($res) {
                             $res['danweiming']=$danweiming;
                             $res['number'] = $res['number'];
                             $res['bnumber']=$res['number'];
@@ -368,7 +477,7 @@ function getGarbagePrice($ids = "",$danweiming, $Model,$orderinfo="")
                     $where[] = ['garbageid', '=', $ids_arr[0]];
                     $where[] = ['regionz', '=', $region];
                     $where[]=['garbageunitid','=',$endinfo1['id']];
-                    if ($user['userInfo']['groupid'] < 3 && $user['userInfo']['daili'] == 1) {
+                    if ($daili) {
                         $where[] = ['dlstarttime', 'lt', time()];
                         $where[] = ['dlendtime', 'gt', time()];
                     }else{
@@ -378,7 +487,7 @@ function getGarbagePrice($ids = "",$danweiming, $Model,$orderinfo="")
                     $res = $Model->MFind($where, '');
                     if($res){
                         $res['garbageunitid'] = $endinfo['id'];
-                        if ($user['userInfo']['groupid'] < 3 && $user['userInfo']['daili'] == 1) {
+                        if ($daili) {
                             $res['number'] = $res['dlnumber']*$endinfo['transweight'];
                             $res['danweiming']='kg';
                             $res['bnumber']=$res['dlnumber'];
@@ -386,6 +495,66 @@ function getGarbagePrice($ids = "",$danweiming, $Model,$orderinfo="")
                             $res['bnumber']=$res['number'];
                             $res['danweiming']='kg';
                             $res['number'] = $res['number']*$endinfo['transweight'];
+                        }
+                    }else if($daili){
+                        $where = [];
+                        $where[] = ['garbageid', '=', $ids_arr[0]];
+                        $where[] = ['regionz', '=', $region];
+                        $where[]=['garbageunitid','=',$endinfo1['id']];
+                        $where[] = ['start_time', 'lt', time()];
+                        $where[] = ['end_time', 'gt', time()];
+                        $res = $Model->MFind($where, '');
+                        if($res) {
+                            $res['garbageunitid'] = $endinfo['id'];
+                            $res['bnumber'] = $res['number'];
+                            $res['danweiming'] = 'kg';
+                            $res['number'] = $res['number'] * $endinfo['transweight'];
+                        }else{
+                            //自己没有价格找上级 看上级kg价格是否设置
+                            $gwhere['danweiming']='kg';
+                            $gwhere['garbageid']=$ids_arr[1];
+                            $garbageuinfo=$garbageum->MFind($gwhere);
+                            $where = [];
+                            $where[] = ['garbageid', '=', $ids_arr[1]];
+                            $where[] = ['regionz', '=', $region];
+                            $where[]=['garbageunitid','=',$garbageuinfo['id']];
+                            if ($daili) {
+                                $where[] = ['dlstarttime', 'lt', time()];
+                                $where[] = ['dlendtime', 'gt', time()];
+                            }else{
+                                $where[] = ['start_time', 'lt', time()];
+                                $where[] = ['end_time', 'gt', time()];
+                            }
+                            $res = $Model->MFind($where, '');
+                            if($res){
+                                $res['garbageunitid'] = $garbageuinfo['id'];
+                                if ($daili) {
+                                    $res['bnumber']=$res['dlnumber'];
+                                    $res['danweiming']='kg';
+                                    $res['number'] = $res['dlnumber']*$endinfo['transweight'];
+                                }else{
+                                    $res['bnumber']=$res['number'];
+                                    $res['danweiming']='kg';
+                                    $res['number'] = $res['number']*$endinfo['transweight'];
+                                }
+                            }else{
+                                $gwhere['danweiming']='kg';
+                                $gwhere['garbageid']=$ids_arr[1];
+                                $garbageuinfo=$garbageum->MFind($gwhere);
+                                $where = [];
+                                $where[] = ['garbageid', '=', $ids_arr[1]];
+                                $where[] = ['regionz', '=', $region];
+                                $where[]=['garbageunitid','=',$garbageuinfo['id']];
+                                $where[] = ['start_time', 'lt', time()];
+                                $where[] = ['end_time', 'gt', time()];
+                                $res = $Model->MFind($where, '');
+                                if($res) {
+                                    $res['garbageunitid'] = $garbageuinfo['id'];
+                                    $res['bnumber'] = $res['number'];
+                                    $res['danweiming'] = 'kg';
+                                    $res['number'] = $res['number'] * $endinfo['transweight'];
+                                }
+                            }
                         }
                     }else{
                         //自己没有价格找上级 看上级kg价格是否设置
@@ -396,7 +565,7 @@ function getGarbagePrice($ids = "",$danweiming, $Model,$orderinfo="")
                         $where[] = ['garbageid', '=', $ids_arr[1]];
                         $where[] = ['regionz', '=', $region];
                         $where[]=['garbageunitid','=',$garbageuinfo['id']];
-                        if ($user['userInfo']['groupid'] < 3 && $user['userInfo']['daili'] == 1) {
+                        if ($daili) {
                             $where[] = ['dlstarttime', 'lt', time()];
                             $where[] = ['dlendtime', 'gt', time()];
                         }else{
@@ -406,7 +575,7 @@ function getGarbagePrice($ids = "",$danweiming, $Model,$orderinfo="")
                         $res = $Model->MFind($where, '');
                         if($res){
                             $res['garbageunitid'] = $garbageuinfo['id'];
-                            if ($user['userInfo']['groupid'] < 3 && $user['userInfo']['daili'] == 1) {
+                            if ($daili) {
                                 $res['bnumber']=$res['dlnumber'];
                                 $res['danweiming']='kg';
                                 $res['number'] = $res['dlnumber']*$endinfo['transweight'];
@@ -414,6 +583,23 @@ function getGarbagePrice($ids = "",$danweiming, $Model,$orderinfo="")
                                 $res['bnumber']=$res['number'];
                                 $res['danweiming']='kg';
                                 $res['number'] = $res['number']*$endinfo['transweight'];
+                            }
+                        }else{
+                            $gwhere['danweiming']='kg';
+                            $gwhere['garbageid']=$ids_arr[1];
+                            $garbageuinfo=$garbageum->MFind($gwhere);
+                            $where = [];
+                            $where[] = ['garbageid', '=', $ids_arr[1]];
+                            $where[] = ['regionz', '=', $region];
+                            $where[]=['garbageunitid','=',$garbageuinfo['id']];
+                            $where[] = ['start_time', 'lt', time()];
+                            $where[] = ['end_time', 'gt', time()];
+                            $res = $Model->MFind($where, '');
+                            if($res) {
+                                $res['garbageunitid'] = $garbageuinfo['id'];
+                                $res['bnumber'] = $res['number'];
+                                $res['danweiming'] = 'kg';
+                                $res['number'] = $res['number'] * $endinfo['transweight'];
                             }
                         }
                     }

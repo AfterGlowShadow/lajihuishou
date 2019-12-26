@@ -134,9 +134,16 @@ class BaseModel extends Pivot{
     //获取当前时间数据库中有无符合条件时间段
     public function MFHTime($where,$order="",$field="")
     {
-       return Db::table($this->table)
+        return Db::table($this->table)
             ->whereBetweenTimeField('start_time','end_time')->where($where)->order($order)->field($field)
             ->select();
+    }
+    public function MFHTimeT($where,$order="",$field="")
+    {
+        $data=Db::table($this->table)
+            ->whereBetweenTimeField('dlstarttime','dlendtime')->where($where)->order($order)->field($field)
+            ->select();
+        return $data;
     }
 // 查询2017年6月1日
     //多表查询数据

@@ -23,15 +23,25 @@ class GarbagePrice extends  BaseModel
             $post=Request::post();
             (new GarbagePriceAddValidate())->goCheck($post);
         }
-        if((array_key_exists("number",$post)&&$post['number']!="")){
+        if((array_key_exists("number",$post)&&$post['number']!="")||(array_key_exists("dlnumber",$post)&&$post['dlnumber']!="")){
             if($post==""){
                 $post['garbageid']=substr($post['garbageid'],0,strlen($post['garbageid'])-1);
             }
             $cont['garbageid']=$post['garbageid'];
 //            $fadmin1=$this->MBetweenTime($cont,'start_time',$post['start_time'],$post['end_time']);
 //            $fadmin2=$this->MBetweenTime($cont,'end_time',$post['start_time'],$post['end_time']);
-            $fadmin1=$this->MBetweenTime($post['garbageid'],'start_time',$post['start_time'],$post['end_time'],$post['regionz'],$post['garbageunitid']);
-            $fadmin2=$this->MBetweenTime($post['garbageid'],'end_time',$post['start_time'],$post['end_time'],$post['regionz'],$post['garbageunitid']);
+//            $fadmin1=$this->MBetweenTime($post['garbageid'],'start_time',$post['start_time'],$post['end_time'],$post['regionz'],$post['garbageunitid']);
+//            $fadmin2=$this->MBetweenTime($post['garbageid'],'end_time',$post['start_time'],$post['end_time'],$post['regionz'],$post['garbageunitid']);
+            $user=session($post['token'])['userInfo'];
+            if($user['groupid']==3&&$user['daili']==1){
+                $fadmin1=$this->MBetweenTime($post['garbageid'],'dlstarttime',$post['start_time'],$post['end_time'], $post['regionz'],$post['garbageunitid']);
+                $fadmin2=$this->MBetweenTime($post['garbageid'],'dlendtime',$post['end_time'],$post['end_time'], $post['regionz'],$post['garbageunitid']);
+                unset($post['start_time']);
+                unset($post['end_time']);
+            }else {
+                $fadmin1=$this->MBetweenTime($post['garbageid'],'start_time',$post['start_time'],$post['end_time'], $post['regionz'],$post['garbageunitid']);
+                $fadmin2=$this->MBetweenTime($post['garbageid'],'end_time',$post['start_time'],$post['end_time'], $post['regionz'],$post['garbageunitid']);
+            }
             if(!empty($fadmin1)||!empty($fadmin2)){
                 $this->error="时间不能重叠";
                 return false;
@@ -69,6 +79,8 @@ class GarbagePrice extends  BaseModel
             if($user['groupid']==3&&$user['daili']==1){
                 $fcont['dlstarttime']=$post['start_time'];
                 $fcont['dlendtime']=$post['end_time'];
+                $post['dlstarttime']=$post['start_time'];
+                $post['dlendtime']=$post['end_time'];
             }else {
                 $fcont['start_time']=$post['start_time'];
                 $fcont['end_time']=$post['end_time'];
@@ -83,7 +95,11 @@ class GarbagePrice extends  BaseModel
             }
             $fcont['garbageunitid']=$garbageunitinfo['id'];
             $post['garbageunitid']=$fcont['garbageunitid'];
-            $post['number']=$value['price'];
+            if($user['groupid']==3&&$user['daili']==1) {
+                $post['dlnumber'] = $value['price'];
+            }else{
+                $post['number'] = $value['price'];
+            }
             $fcont['garbageid']=$post['id'];
             $fcont['regionz']=$post['regionz'];
             $fgpres=$this->MFind($fcont);
@@ -91,7 +107,7 @@ class GarbagePrice extends  BaseModel
                 $res=$this->AddOne($post);
                 if(!$res){
                     $this->rollback();
-                    $this->error="添加失败";
+//                    $this->error="添加失败";
                     return false;
                 }
 //                return $res;
@@ -117,6 +133,8 @@ class GarbagePrice extends  BaseModel
                 if($user['groupid']==3&&$user['daili']==1){
                     $fadmin1=$this->MBetweenTime($mcont['garbageid'],'dlstarttime',$post['start_time'],$post['end_time'], $mcont['regionz'],$post['garbageunitid']);
                     $fadmin2=$this->MBetweenTime($mcont['garbageid'],'dlendtime',$post['end_time'],$post['end_time'], $mcont['regionz'],$post['garbageunitid']);
+                    unset($post['start_time']);
+                    unset($post['end_time']);
                 }else {
                     $fadmin1=$this->MBetweenTime($mcont['garbageid'],'start_time',$post['start_time'],$post['end_time'], $mcont['regionz'],$post['garbageunitid']);
                     $fadmin2=$this->MBetweenTime($mcont['garbageid'],'end_time',$post['start_time'],$post['end_time'], $mcont['regionz'],$post['garbageunitid']);
