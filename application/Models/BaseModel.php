@@ -201,8 +201,8 @@ class BaseModel extends Pivot{
 //删除垃圾
     public function DeleteOne(){
         $post=Request::post();
-        (new TokenValidate())->goCheck($post);
-        $mcont['token']=$post['token'];
+//        (new TokenValidate())->goCheck($post);
+        $mcont['id']=$post['id'];
         $res=$this->MDelete($mcont);
         if($res){
             return $res;
@@ -215,8 +215,8 @@ class BaseModel extends Pivot{
     public function GetOne()
     {
         $post=Request::post();
-        (new TokenValidate())->goCheck($post);
-        $mcont['token']=$post['token'];
+//        (new TokenValidate())->goCheck($post);
+        $mcont['id']=$post['id'];
         $mcont['del']=0;
         $mcont['status']=1;
         $res=$this->MFind($mcont);

@@ -124,7 +124,7 @@ class Message extends BaseModel
         (new LimitValidate())->goCheck($post);
         $config['page'] = $post['page'];
         $config['list_rows'] = $post['list_rows'];
-        $where['status'] = 1;
+//        $where['status'] = 1;
         $where['del'] = 0;
         $res = $this->MLimitSelect($where, $config, "id desc");
         if ($res) {

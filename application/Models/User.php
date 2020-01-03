@@ -460,6 +460,7 @@ class User extends BaseModel
     {
         $post = Request::post();
         (new LimitValidate())->goCheck($post);
+        $whereor=[];
         if(array_key_exists("token",$post)&&$post['token']!=""){
             $user=session($post['token']);
             if($user['userInfo']['groupid']==3){

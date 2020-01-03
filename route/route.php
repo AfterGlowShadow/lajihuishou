@@ -593,6 +593,16 @@ Route::group('api', function () {
              * @menu 消息管理
              */
             Route::post("notice",'home/Message/Notice');
+            /**
+             * @name 查询消息内容
+             * @menu 消息管理
+             */
+            Route::post("getlistall",'home/Message/GetList');
+            /**
+             * @name 删除消息
+             * @menu 消息管理
+             */
+//            Route::post("delete", 'home/Message/DeleteOne');
         })->header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, authKey, sessionId')->allowCrossDomain();
         /**
          * @name 垃圾分类管理
