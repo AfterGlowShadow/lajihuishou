@@ -398,6 +398,18 @@ Route::group('api', function () {
              */
             Route::post("delete", 'admin/Message/DeleteOne');
         });
+        /**
+         * @menu 系统信息
+         * @name 系统信息
+         * @isshow 1
+         */
+        Route::group('system', function () {
+            /**
+             * @name 添加消息
+             * @menu 消息管理
+             */
+            Route::post("getlist", "admin/System/getSystemConfigList");
+        });
 //    })->middleware(['UserCheck','CheckAuth']);
     });
 

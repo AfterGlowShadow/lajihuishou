@@ -26,4 +26,13 @@ class SystemConfig extends BaseModel
         $res = $this->getValueById($_where,'value');
         return $res;
     }
+    /**
+     * 获取所有配置信息
+     * @param string $name
+     */
+    public function getSystemConfigList(){
+        $_where = [];
+        $res=$this->MSelect($_where);
+        return $res;
+    }
 }

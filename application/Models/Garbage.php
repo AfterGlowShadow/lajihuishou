@@ -422,7 +422,11 @@ class Garbage extends BaseModel
                         if(array_key_exists("token",$post)&&$post['token']!=""){
                             $user=session($post['token']);
                             if($user){
-                                $regionz=$user['region'];
+                                if(array_key_exists('region',$user)){
+                                    $regionz=$user['region'];
+                                }else{
+                                    $regionz="";
+                                }
                             }
                         }
                     }

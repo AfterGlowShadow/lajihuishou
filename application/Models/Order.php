@@ -172,6 +172,19 @@ class Order extends BaseModel
                 }
             }
             $where[] = ['status', '=', $post['status']];
+        }else if($user['userInfo']['groupid'] == 7){
+           if(array_key_exists('type',$post)){
+               if($post['type']=='allin'){
+                   $where[]=['type','in',array(3,6)];
+                   $where[] = ['status', '=', $post['status']];
+               }else if($post['type']=='allout'){
+                   $where[]=['otype','=',1];
+               }
+           }else{
+               if(array_key_exists("utype",$post)){
+                   $where[]=['type','=',$post['utype']];
+               }
+           }
         }
         $config['page'] = $post['page'];
         $config['list_rows'] = $post['list_rows'];

@@ -81,13 +81,21 @@ class OrderCalculation extends BaseModel
                 $garbageOrderList[$k]['stock_id'] = $v['stock_id'];
             }
             if ($unit_price['status'] == 0) {
-                $returnData['msg'] = '获取报价失败';
+                //因后台查询放开 看情况决定是否改成其他方法
+//                print_r($unit_price);
+                $unit_price['data']['danweiming']=$v['danweiming'];
+                $unit_price['data']['garbageunitid']=$v['danweiming'];
+                $unit_price['data']['bnumber']=0;
+                $unit_price['data']['trans']=0;
+                $unit_price['data']['number']=0;
+//                $returnData['msg'] = '获取报价失败';
+////                return $returnData;
+//                $sum_price1 = 0;
+//                $returnData['status']=0;
+//                $returnData['price']=$sum_price1;
 //                return $returnData;
-                $sum_price1 = 0;
-                $returnData['status']=0;
-                $returnData['price']=$sum_price1;
-                return $returnData;
-            } else {
+            }
+//            } else {
                 $garbageOrderList[$k]['danweiming']=$unit_price['data']['danweiming'];
                 $garbageOrderList[$k]['garbageunitid']=$unit_price['data']['garbageunitid'];
 //                $garbageOrderList[$k]['trans']=$unit_price['data']['trans'];
@@ -95,7 +103,7 @@ class OrderCalculation extends BaseModel
                 $garbageOrderList[$k]['weighting_num'] = $v['weighting_num']*$unit_price['data']['trans'];
                 $sum_price1 = bcmul($v['weighting_num'], $unit_price['data']['number'], 1);
                 $sum_number += (int)$v['weighting_num']*$unit_price['data']['trans'];
-            }
+//            }
             $garbageOrderList[$k]['price']=$sum_price1;
             $sum_price += $sum_price1;
             //本地仓库移除
