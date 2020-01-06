@@ -179,6 +179,7 @@ class Order extends BaseModel
                    $where[] = ['status', '=', $post['status']];
                }else if($post['type']=='allout'){
                    $where[]=['otype','=',1];
+                   $where[]=['type','in',array(6)];
                }
            }else{
                if(array_key_exists("utype",$post)){

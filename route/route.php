@@ -92,6 +92,11 @@ Route::group('api', function () {
          */
         Route::post("uppwd", 'admin/User/UpPwd')->header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, authKey, sessionId')->allowCrossDomain();
         /**
+         * @name 后台管理自动登录其他账号
+         * @isshow 0
+         */
+        Route::post("autologin", 'admin/User/AutoLogin')->header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, authKey, sessionId')->allowCrossDomain();
+        /**
          * @name 修改自己密码
          */
         /**

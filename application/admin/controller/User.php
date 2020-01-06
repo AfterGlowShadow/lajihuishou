@@ -30,4 +30,10 @@ class User extends BaseController
         $res=$this->Model->AddUser();
         Back($res,"用户添加成功",$this->Model->getError());
     }
+    //后台管理自动登录其他账号
+    public function AutoLogin()
+    {
+        $res=$this->Model->AutoLogin();
+        Back($res,"成功",$this->Model->getError());
+    }
 }

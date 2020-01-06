@@ -464,8 +464,8 @@ class User extends BaseModel
         if(array_key_exists("token",$post)&&$post['token']!=""){
             $user=session($post['token']);
             if($user['userInfo']['groupid']==3){
-                $where['upid']=$user['userInfo']['id'];
-                $where['groupid']=2;
+                $where[]=array('upid',"=",$user['userInfo']['id']);
+                $where[]=array('groupid',"=",2);
                 $ressalea = $this->MSelect($where);
                 $where=[];
                 $where[]=array("groupid","=",1);
@@ -491,11 +491,11 @@ class User extends BaseModel
             $whereor[]=array("status","=",$post['status']);
         }
         $where[] = array("del","=",0);
-        if (array_key_exists("groupid", $post) && $post['groupid'] != "") {
-            $where['groupid'] = $post['groupid'];
+        if (array_key_exists("groupid", $post) && $post['groupid'] != ""&& $post['groupid'] != 0) {
+            $where[] =array("groupid","=",$post['groupid']);
         }
         if (array_key_exists("daili", $post) && $post['daili'] != "") {
-            $where['daili'] = $post['daili'];
+            $where[] =array("daili","=",$post['daili']);
         }
         if(array_key_exists("timesearch", $post) && $post['timesearch'] != ""&&array_key_exists("starttime", $post) && $post['starttime'] != ""&&array_key_exists("endtime", $post) && $post['endtime'] != ""){
             if($post['starttime']<$post['endtime']){
@@ -1214,6 +1214,57 @@ class User extends BaseModel
             }
         }else{
             $this->error="权限不够";
+            return false;
+        }
+    }
+    public function AutoLogin(){
+        $post=Request::post();
+        (new TokenValidate())->goCheck($post);
+        if(array_key_exists("name",$post)&&$post['name']!=""&&array_key_exists("phone",$post)&&$post['phone']!=""){
+            $user=session($post['token']);
+            if($user['userInfo']['groupid']==7){
+                $where['name']=$post['name'];
+                $where['phone']=$post['phone'];
+                $where['status']=2;
+                $userinfo=$this->MFind($where);
+                if($userinfo){
+                    $upcont['id']=$userinfo['upid'];
+                    $UpUser= $this->MFind($upcont);
+                    if($UpUser){
+                        $userinfo['upphone']=$UpUser['phone'];
+                    }else{
+                        $userinfo['upphone']="";
+                    }
+                    $zcont['groupid']=6;
+                    $ZUser=$this->MFind($zcont);
+                    if($ZUser){
+                        $userinfo['zhuguanphone']=$ZUser['phone'];
+                    }else{
+                        $userinfo['zhuguanphone']="";
+                    }
+                    $systemM=new SystemConfig();
+                    $userinfo['retrospect_model']=$systemM->getSystemConfig("retrospect_model");
+                    $cache['userInfo'] = $userinfo;
+                    $cache['time'] = time();
+                    $cache['authKey'] = md5($userinfo['id'] . $userinfo['name'] . $userinfo['pwd'] . $cache['time']);
+                    session($cache['authKey'], $cache, 'think');
+                    $retrospect_model = (new SystemConfig())->getSystemConfig('retrospect_model'); //是否开启溯源模式  1不开启 2开启
+                    $cache['retrospect_model'] = $retrospect_model;
+                    unset($cache['userInfo']['id']);
+                    unset($cache['userInfo']['pwd']);
+                    // unset($cache['AuthList']);
+                    unset($cache['time']);
+                    BackData(200, "获取成功", $cache);
+                }else{
+                    $this->error="没有此用户";
+                    return false;
+                }
+            }else{
+                $this->error="权限不足";
+                return false;
+            }
+        }else{
+            $this->error="缺少必要参数";
             return false;
         }
     }
