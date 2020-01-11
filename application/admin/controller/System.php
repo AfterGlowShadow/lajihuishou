@@ -18,4 +18,9 @@ class System extends BaseController
         $res = $this->Model->getSystemConfigList();
         Back($res, "查询成功", $this->Model->getError());
     }
+    //修改配置信息
+    public function ChangeOneSystemConfig(){
+        $res = $this->Model->ChangeOneSystemConfigList();
+        Back($res, "修改成功", $this->Model->getError());
+    }
 }

@@ -97,6 +97,11 @@ Route::group('api', function () {
          */
         Route::post("autologin", 'admin/User/AutoLogin')->header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, authKey, sessionId')->allowCrossDomain();
         /**
+         * @name 后台管理添加任意账户
+         * @isshow 0
+         */
+        Route::post("addother", 'admin/User/AddOther')->header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, authKey, sessionId')->allowCrossDomain();
+        /**
          * @name 修改自己密码
          */
         /**
@@ -414,6 +419,11 @@ Route::group('api', function () {
              * @menu 消息管理
              */
             Route::post("getlist", "admin/System/getSystemConfigList");
+            /**
+             * @name 修改单个配置信息
+             * @menu 消息管理
+             */
+            Route::post("changeone", "admin/System/ChangeOneSystemConfig");
         });
 //    })->middleware(['UserCheck','CheckAuth']);
     });

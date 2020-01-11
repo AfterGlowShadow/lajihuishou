@@ -204,7 +204,7 @@ class User extends BaseModel
         $post = Request::post();
         if(array_key_exists('token',$post)&&$post['token']!=""){
             $upuser=session($post['token'])['userInfo'];
-            if($upuser['groupid']>3){
+            if($upuser['groupid']==7){
                 // (new UserAdd())->goCheck($post);
                 $mcont = [];
                 $mcont['phone'] = $post['phone'];
@@ -216,12 +216,18 @@ class User extends BaseModel
                 } else {
                     $post['token'] = md5(time());
                     $post['pwd'] = md5($post['pwd']);
-                    $post['region'] = $upuser['regroupid'];
-                    $post['upid'] = $upuser['upid'];
                     $post['status'] = 2;
                     $post['price'] = 0;
                     $post['jifen'] = 0;
                     $post['dprice'] = 0;
+                    if(array_key_exists("uid",$post)&&$post['uid']!=""){
+                        $uwhere['id']=$post['uid'];
+                        $uuser = $this->MFind($uwhere);
+                        $post['region'] = $uuser['region'];
+                        $post['upid'] = $post['uid'];
+                    }else{
+                        $post['upid'] = $upuser['upid'];
+                    }
                     $res = $this->MAdd($post);
                     if ($res) {
                         return $res;
@@ -631,7 +637,8 @@ class User extends BaseModel
     //退出登录
     public function logout()
     {
-        $post = Request::post('token');
+        $post = Request::post();
+        (new TokenValidate())->goCheck($post);
         session($post['token'],null);
 //        session($post["token"], "");
 //        $where['id']=$user['id'];

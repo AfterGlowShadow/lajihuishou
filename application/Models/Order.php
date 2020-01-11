@@ -186,6 +186,7 @@ class Order extends BaseModel
                    $where[]=['type','=',$post['utype']];
                }
            }
+           $where[] = ['status', '=', $post['status']];
         }
         $config['page'] = $post['page'];
         $config['list_rows'] = $post['list_rows'];
