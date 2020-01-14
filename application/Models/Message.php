@@ -126,6 +126,9 @@ class Message extends BaseModel
         $config['list_rows'] = $post['list_rows'];
 //        $where['status'] = 1;
         $where['del'] = 0;
+        if(array_key_exists("type",$post)&&$post['type']!=""){
+            $where['type']=$post['type'];
+        }
         $res = $this->MLimitSelect($where, $config, "id desc");
         if ($res) {
             return $res;

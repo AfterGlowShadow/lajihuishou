@@ -467,6 +467,7 @@ class User extends BaseModel
         $post = Request::post();
         (new LimitValidate())->goCheck($post);
         $whereor=[];
+        $ressalea="";
         if(array_key_exists("token",$post)&&$post['token']!=""){
             $user=session($post['token']);
             if($user['userInfo']['groupid']==3){
@@ -494,7 +495,9 @@ class User extends BaseModel
         $field = array("token", "name", "phone", 'id', 'realname', 'pic', 'zhicheng', 'groupid', 'jifen', 'price', 'txprice','address');
         if(array_key_exists("status",$post)&&$post['status']!="") {
             $where[] = array("status","=",$post['status']);
-            $whereor[]=array("status","=",$post['status']);
+            if($ressalea){
+                $whereor[]=array("status","=",$post['status']);
+            }
         }
         $where[] = array("del","=",0);
         if (array_key_exists("groupid", $post) && $post['groupid'] != ""&& $post['groupid'] != 0) {
